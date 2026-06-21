@@ -1,0 +1,12 @@
+[project]
+name = "tales-of-seikyu-korean-patch"
+version = "0.1.0"
+description = "Unofficial Korean patcher for Tales of Seikyu"
+requires-python = ">=3.11"
+dependencies = [
+  "UnityPy==1.25.0"
+]
+
+[tool.ruff]
+line-length = 140
+target-version = "py311"
