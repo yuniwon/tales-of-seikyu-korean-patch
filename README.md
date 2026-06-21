@@ -8,21 +8,29 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 - 게임: Tales of Seikyu
 - 플랫폼: Steam Windows
-- 패치 버전: `0.1.0-playtest.20260621`
-- 지원 방식: 로컬 원본 파일에 패치 적용, 설치 전 자동 백업, GUI 복구 지원
+- 패치 버전: `0.1.1-playtest.20260621`
+- 지원 방식: 로컬 원본 파일에 패치 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드
 
 ## 설치
 
 1. GitHub Releases에서 최신 ZIP을 다운로드합니다.
 2. 압축을 풉니다.
 3. `TalesOfSeikyuKoreanPatch.exe`를 실행합니다.
-4. 게임 폴더가 자동으로 잡히지 않으면 `찾아보기`로 `Tales Of Seikyu_Data` 폴더 또는 게임 설치 폴더를 선택합니다.
+4. 게임 폴더가 자동으로 잡히지 않으면 `게임 폴더 찾기`로 `Tales Of Seikyu_Data` 폴더 또는 게임 설치 폴더를 선택합니다.
 5. `한국어 패치 설치/업데이트`를 누릅니다.
 6. 완료 후 게임을 완전히 다시 실행합니다.
+
+패처 첫 화면에서는 게임 경로, 패치 적용 상태, 최신 패처 릴리스 상태를 자동으로 확인합니다.
 
 Steam 경로 확인:
 
 - Steam 라이브러리 -> Tales of Seikyu 우클릭 -> 관리 -> 로컬 파일 보기
+
+## 최신 패처 확인
+
+`최신 패처 확인`은 GitHub Releases의 최신 릴리스를 조회합니다.
+
+`최신 패처 다운로드`는 최신 ZIP 파일을 사용자 다운로드 폴더에 저장하고 폴더를 엽니다. 실행 중인 패처 EXE를 자동으로 덮어쓰거나, 다운로드한 파일을 자동 실행하지 않습니다. 새 ZIP을 받은 뒤에는 압축을 풀고 새 `TalesOfSeikyuKoreanPatch.exe`를 실행해 주세요.
 
 ## 복구
 
@@ -43,6 +51,7 @@ Steam 경로 확인:
 ```powershell
 $env:PYTHONUTF8='1'
 python tools\generate_payload.py
+python tools\test_update_logic.py
 python tools\run_temp_baseline_test.py
 python tools\build_release.py
 python tools\run_exe_temp_test.py
@@ -54,6 +63,7 @@ python tools\scan_release_assets.py
 ```powershell
 $env:PYTHONPATH='src'
 python -m tos_ko_patcher.app --no-gui --game-data "C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data" --verify
+python -m tos_ko_patcher.app --no-gui --check-update
 ```
 
 ## 면책

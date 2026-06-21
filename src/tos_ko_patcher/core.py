@@ -4,11 +4,14 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import struct
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -17,12 +20,18 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.0-playtest.20260621"
+PATCH_VERSION = "0.1.1-playtest.20260621"
+PATCH_TAG = f"v{PATCH_VERSION}"
+GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
+LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
 DEFAULT_STEAM_DATA = Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Steam/steamapps/common/Tales of Seikyu/Tales Of Seikyu_Data"
 EXCEL_GLOB = "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_*.bundle"
 BAG_GLOB = "StreamingAssets/aa/StandaloneWindows64/uiview_assets_bagfunctionitem_*.bundle"
 PATCH_STATE_DIR = ".tos_korean_patch"
 PAYLOAD_RELATIVE = Path("payload/patch_payload.json")
+RELEASE_ASSET_PREFIX = "TalesOfSeikyuKoreanPatch"
+USER_AGENT = f"tos-ko-patcher/{PATCH_VERSION}"
 
 AVG_COLUMNS = [
     "text_id",
@@ -112,6 +121,170 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def default_download_dir() -> Path:
+    downloads = Path.home() / "Downloads"
+    return downloads if downloads.exists() else Path.home()
+
+
+def release_tag_key(tag: str) -> list[tuple[int, int | str]]:
+    tokens = re.findall(r"\d+|[A-Za-z]+", tag.lstrip("vV"))
+    key: list[tuple[int, int | str]] = []
+    for token in tokens:
+        if token.isdigit():
+            key.append((1, int(token)))
+        else:
+            key.append((0, token.lower()))
+    return key
+
+
+def compare_release_tags(left: str, right: str) -> int:
+    left_key = release_tag_key(left)
+    right_key = release_tag_key(right)
+    return (left_key > right_key) - (left_key < right_key)
+
+
+def fetch_latest_release(api_url: str = LATEST_RELEASE_API, timeout: int = 10) -> dict[str, Any]:
+    request = urllib.request.Request(
+        api_url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": USER_AGENT,
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+        raise PatchError(f"GitHub 최신 릴리스 확인에 실패했습니다: {exc}") from exc
+
+
+def select_release_asset(release: dict[str, Any]) -> dict[str, Any] | None:
+    assets = release.get("assets") or []
+    if not isinstance(assets, list):
+        return None
+
+    def is_zip(asset: dict[str, Any]) -> bool:
+        name = str(asset.get("name") or "")
+        return name.lower().endswith(".zip") and bool(asset.get("browser_download_url"))
+
+    preferred = [
+        asset
+        for asset in assets
+        if isinstance(asset, dict) and is_zip(asset) and str(asset.get("name") or "").startswith(RELEASE_ASSET_PREFIX)
+    ]
+    if preferred:
+        return preferred[0]
+    fallback = [asset for asset in assets if isinstance(asset, dict) and is_zip(asset)]
+    return fallback[0] if fallback else None
+
+
+def release_update_status(release: dict[str, Any], current_tag: str = PATCH_TAG) -> dict[str, Any]:
+    latest_tag = str(release.get("tag_name") or "")
+    if not latest_tag:
+        raise PatchError("GitHub 릴리스 응답에 tag_name이 없습니다.")
+    asset = select_release_asset(release)
+    comparison = compare_release_tags(latest_tag, current_tag)
+    if comparison > 0:
+        status = "update_available"
+    elif comparison == 0:
+        status = "current"
+    else:
+        status = "ahead"
+    return {
+        "status": status,
+        "current_tag": current_tag,
+        "latest_tag": latest_tag,
+        "is_newer": comparison > 0,
+        "release_url": release.get("html_url") or RELEASES_URL,
+        "published_at": release.get("published_at") or "",
+        "asset_name": asset.get("name") if asset else "",
+        "asset_size": asset.get("size") if asset else 0,
+        "asset_digest": asset.get("digest") if asset else "",
+        "asset": asset,
+    }
+
+
+def check_latest_release(timeout: int = 10) -> dict[str, Any]:
+    return release_update_status(fetch_latest_release(timeout=timeout))
+
+
+def expected_asset_sha256(asset: dict[str, Any]) -> str:
+    digest = str(asset.get("digest") or "")
+    if digest.lower().startswith("sha256:"):
+        return digest.split(":", 1)[1].lower()
+    return ""
+
+
+def download_release_asset(
+    asset: dict[str, Any],
+    dest_dir: Path | None = None,
+    log: Callable[[str], None] = log_noop,
+    progress: Callable[[int, int], None] | None = None,
+    timeout: int = 60,
+) -> dict[str, Any]:
+    url = str(asset.get("browser_download_url") or "")
+    name = Path(str(asset.get("name") or "")).name
+    if not url or not name.lower().endswith(".zip"):
+        raise PatchError("다운로드 가능한 ZIP 릴리스 자산을 찾지 못했습니다.")
+
+    target_dir = (dest_dir or default_download_dir()).expanduser().resolve()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / name
+    part = target.with_name(f"{target.name}.part")
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    expected_hash = expected_asset_sha256(asset)
+
+    log(f"다운로드 시작: {name}")
+    h = hashlib.sha256()
+    downloaded = 0
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            total = int(response.headers.get("Content-Length") or asset.get("size") or 0)
+            with part.open("wb") as handle:
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    handle.write(chunk)
+                    h.update(chunk)
+                    downloaded += len(chunk)
+                    if progress:
+                        progress(downloaded, total)
+        actual_hash = h.hexdigest()
+        if expected_hash and actual_hash.lower() != expected_hash:
+            raise PatchError(f"다운로드 해시 검증 실패: expected={expected_hash}, actual={actual_hash}")
+        if target.exists():
+            target.unlink()
+        part.replace(target)
+    except Exception:
+        part.unlink(missing_ok=True)
+        raise
+
+    log(f"다운로드 완료: {target}")
+    return {
+        "status": "downloaded",
+        "path": str(target),
+        "sha256": actual_hash,
+        "expected_sha256": expected_hash,
+        "size": downloaded,
+    }
+
+
+def download_latest_release(
+    dest_dir: Path | None = None,
+    log: Callable[[str], None] = log_noop,
+    progress: Callable[[int, int], None] | None = None,
+    timeout: int = 60,
+) -> dict[str, Any]:
+    release = fetch_latest_release(timeout=timeout)
+    status = release_update_status(release)
+    asset = status.get("asset")
+    if not isinstance(asset, dict):
+        raise PatchError("최신 릴리스에 다운로드 가능한 ZIP 자산이 없습니다.")
+    result = download_release_asset(asset, dest_dir, log, progress, timeout)
+    return {**status, **result, "asset": None}
 
 
 def read_u32(raw: bytes, pos: int) -> tuple[int, int]:
@@ -545,6 +718,9 @@ def build_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument("--install", action="store_true", help="한국어 패치를 설치합니다.")
     parser.add_argument("--restore", action="store_true", help="설치 시 만든 백업으로 복구합니다.")
     parser.add_argument("--verify", action="store_true", help="현재 패치 적용 상태를 확인합니다.")
+    parser.add_argument("--check-update", action="store_true", help="GitHub 최신 패처 릴리스를 확인합니다.")
+    parser.add_argument("--download-update", action="store_true", help="GitHub 최신 패처 ZIP을 다운로드합니다.")
+    parser.add_argument("--download-dir", default="", help="최신 패처 ZIP을 저장할 폴더")
     parser.add_argument("--no-gui", action="store_true", help="GUI 없이 명령줄 결과만 출력합니다.")
     return parser
 
@@ -565,8 +741,14 @@ def cli_main(argv: list[str] | None = None) -> int:
             result = restore_patch(game_data, payload, log)
         elif args.verify:
             result = verify_patch(game_data, payload, log)
+        elif args.check_update:
+            result = check_latest_release()
+            result.pop("asset", None)
+        elif args.download_update:
+            download_dir = Path(args.download_dir).resolve() if args.download_dir else None
+            result = download_latest_release(download_dir, log)
         else:
-            parser.error("one of --install, --restore, or --verify is required when --no-gui is used")
+            parser.error("one of --install, --restore, --verify, --check-update, or --download-update is required when --no-gui is used")
             return 2
         print(json.dumps(result, ensure_ascii=False))
         return 0
