@@ -6,14 +6,14 @@ Tales of Seikyu 비공식 한글패치 배포 안내입니다.
 
 ## 1) 최신 버전
 
-- 패치 버전: `0.1.1-playtest.20260621`
+- 패치 버전: `0.1.2-playtest.20260621`
 - 지원 플랫폼: Steam Windows
 - 대상 게임 버전/buildid: 2026년 6월 17일 이후 현재 로컬 검증 빌드의 확인된 Addressables 번들 해시
 - 최근 갱신일: 2026-06-21
 
 ## 2) 다운로드
 
-GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.1-playtest.20260621.zip`을 다운로드해 주세요.
+GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.2-playtest.20260621.zip`을 다운로드해 주세요.
 
 다른 곳으로 공유할 때는 파일 재업로드 대신 이 저장소/릴리스 링크를 공유해 주세요.
 
@@ -22,7 +22,7 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.1-playtest.20260621.zip`을
 1. ZIP 파일을 다운로드합니다.
 2. 원하는 위치에 압축을 풉니다.
 3. `TalesOfSeikyuKoreanPatch.exe`를 실행합니다.
-4. 첫 화면에서 게임 경로, 패치 상태, 최신 패처 상태를 확인합니다.
+4. 첫 화면에서 게임 경로, 패치 상태, 폰트 상태, 최신 패처 상태를 확인합니다.
 5. 게임 폴더가 자동으로 잡히지 않으면 `게임 폴더 찾기`로 설치 폴더를 지정합니다.
 6. `최신 패처 확인`에서 새 버전이 보이면 `최신 패처 다운로드`를 눌러 새 ZIP을 받을 수 있습니다.
 7. `한국어 패치 설치/업데이트`를 실행합니다.
@@ -40,11 +40,17 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.1-playtest.20260621.zip`을
 
 ## 5) 이번 패처 개선 사항
 
+- 스타샌드 아일랜드 로컬 한글패치 배포본의 UX를 참고해, 상태 확인과 진단 기능을 보강했습니다.
 - 첫 화면에 게임 경로, 패치 적용 상태, GitHub 최신 릴리스 상태를 표시합니다.
+- 폰트 fallback 상태를 별도 카드와 검증 JSON의 `font_ok` 값으로 표시합니다.
+- Steam `libraryfolders.vdf` / `appmanifest_2340520.acf` 기반 설치 경로 자동 탐색을 보강했습니다.
+- 패처에서 Steam을 통한 게임 실행 요청을 할 수 있습니다.
+- 문제 제보용 진단 리포트 저장 기능을 추가했습니다.
+- 게임 폴더를 직접 수정하지 않고 패치된 파일을 별도 폴더에 생성하는 오프라인 출력 기능을 추가했습니다.
 - GitHub 최신 릴리스 확인과 ZIP 다운로드 기능을 추가했습니다.
 - 다운로드 완료 후 저장 폴더를 열어 바로 새 ZIP을 찾을 수 있게 했습니다.
 - 작업 로그 저장 기능을 추가했습니다.
-- 명령줄에서도 `--check-update`, `--download-update`를 사용할 수 있습니다.
+- 명령줄에서도 `--check-update`, `--download-update`, `--diagnose`, `--export-patch`, `--launch-game`을 사용할 수 있습니다.
 
 ## 6) 자동으로 진행되는 패치 작업
 
@@ -52,7 +58,7 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.1-playtest.20260621.zip`을
 - 지원 번들 해시 확인
 - 원본 파일 백업 생성
 - 한국어 텍스트 적용
-- 가방 UI 카테고리용 한글 폰트 fallback 적용
+- 가방 UI 카테고리용 한글 폰트 fallback 적용 및 검증
 - 패치 적용 후 검증
 
 패치 파일에는 완성된 게임 원본 번들 전체가 들어 있지 않습니다. 사용자 PC에 설치된 원본 게임 파일에 한글 텍스트를 적용하는 방식입니다.

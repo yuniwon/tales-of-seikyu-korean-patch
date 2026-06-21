@@ -5,6 +5,7 @@ import os
 import queue
 import sys
 import threading
+import time
 import webbrowser
 from pathlib import Path
 from tkinter import BOTH, END, LEFT, RIGHT, X, StringVar, Text, Tk, filedialog, messagebox
@@ -19,11 +20,15 @@ from tos_ko_patcher.core import (
     check_latest_release,
     cli_main,
     default_download_dir,
+    default_export_dir,
     default_game_data,
     download_latest_release,
+    export_patch_files,
     install_patch,
+    launch_game,
     restore_patch,
     verify_patch,
+    write_diagnostic_report,
 )
 
 
@@ -51,6 +56,7 @@ class PatcherGui:
         self.path_var = StringVar(value=str(default_game_data()))
         self.path_status_var = StringVar(value="경로 확인 대기")
         self.patch_status_var = StringVar(value="패치 상태 확인 대기")
+        self.font_status_var = StringVar(value="폰트 상태 확인 대기")
         self.update_status_var = StringVar(value="최신 릴리스 확인 대기")
         self.progress_var = StringVar(value="게임을 종료한 뒤 설치/복구를 진행해 주세요.")
         self.version_var = StringVar(value=f"현재 패처 {PATCH_VERSION}")
@@ -113,6 +119,7 @@ class PatcherGui:
         status_row.pack(fill=X, pady=(0, 14))
         self._status_card(status_row, "게임 경로", self.path_status_var).pack(side=LEFT, fill=X, expand=True, padx=(0, 10))
         self._status_card(status_row, "패치 상태", self.patch_status_var).pack(side=LEFT, fill=X, expand=True, padx=(0, 10))
+        self._status_card(status_row, "폰트 상태", self.font_status_var).pack(side=LEFT, fill=X, expand=True, padx=(0, 10))
         self._status_card(status_row, "업데이트", self.update_status_var).pack(side=LEFT, fill=X, expand=True)
 
         path_panel = ttk.Frame(outer, style="Panel.TFrame", padding=14)
@@ -140,8 +147,11 @@ class PatcherGui:
         secondary_row = ttk.Frame(action_panel, style="Panel.TFrame")
         secondary_row.pack(fill=X, pady=(10, 0))
         self._add_button(secondary_row, "릴리스 페이지 열기", self._open_releases).pack(side=LEFT, padx=(0, 8))
+        self._add_button(secondary_row, "게임 실행", lambda: self._launch_game()).pack(side=LEFT, padx=(0, 8))
+        self._add_button(secondary_row, "진단 리포트 저장", self._save_diagnostic).pack(side=LEFT, padx=(0, 8))
+        self._add_button(secondary_row, "오프라인 패치 파일 만들기", self._export_patch).pack(side=LEFT, padx=(0, 8))
         self._add_button(secondary_row, "로그 저장", self._save_log).pack(side=LEFT)
-        ttk.Label(secondary_row, textvariable=self.progress_var, style="PanelMuted.TLabel").pack(side=RIGHT)
+        ttk.Label(action_panel, textvariable=self.progress_var, style="PanelMuted.TLabel", wraplength=820).pack(anchor="w", pady=(10, 0))
 
         log_panel = ttk.Frame(outer, style="Panel.TFrame", padding=12)
         log_panel.pack(fill=BOTH, expand=True)
@@ -161,6 +171,7 @@ class PatcherGui:
         self.log.pack(fill=BOTH, expand=True)
         self._log("게임을 완전히 종료한 뒤 설치/복구를 진행해 주세요.")
         self._log("최신 패처 확인은 GitHub Releases를 조회하고, 다운로드는 ZIP 파일 저장까지만 진행합니다.")
+        self._log("폰트는 게임 내 CJK 폰트 fallback 연결 상태를 별도로 검증합니다.")
 
     def _status_card(self, parent: ttk.Frame, title: str, variable: StringVar) -> ttk.Frame:
         frame = ttk.Frame(parent, style="Panel.TFrame", padding=14)
@@ -198,6 +209,31 @@ class PatcherGui:
             return
         Path(target).write_text(self.log.get("1.0", END), encoding="utf-8")
         self._log(f"로그 저장: {target}")
+
+    def _save_diagnostic(self) -> None:
+        stamp = time.strftime("%Y%m%d_%H%M%S")
+        target = filedialog.asksaveasfilename(
+            title="진단 리포트 저장",
+            initialfile=f"tos-ko-diagnostic-{stamp}.json",
+            defaultextension=".json",
+            filetypes=[("JSON report", "*.json"), ("All files", "*.*")],
+        )
+        if not target:
+            return
+        self._run_worker(
+            "diagnose",
+            "진단 리포트 저장",
+            lambda: write_diagnostic_report(self._path(), Path(target)),
+        )
+
+    def _export_patch(self) -> None:
+        selected = filedialog.askdirectory(title="오프라인 패치 파일을 만들 폴더 선택", initialdir=str(default_export_dir().parent))
+        output = Path(selected) if selected else default_export_dir()
+        self._run_worker(
+            "export_patch",
+            "오프라인 패치 파일 만들기",
+            lambda: export_patch_files(self._path(), output, log=self._queue_log),
+        )
 
     def _log(self, message: str) -> None:
         self.log.insert(END, message + "\n")
@@ -305,6 +341,9 @@ class PatcherGui:
             notify,
         )
 
+    def _launch_game(self, notify: bool = True) -> None:
+        self._run_worker("launch_game", "게임 실행", lambda: launch_game(log=self._queue_log), notify)
+
     def _download_progress(self, downloaded: int, total: int) -> None:
         if total:
             percent = downloaded * 100 // total
@@ -318,12 +357,14 @@ class PatcherGui:
         elif action == "install":
             self.path_status_var.set("경로 확인됨")
             self.patch_status_var.set("한국어 패치 적용됨")
+            self._apply_font_status(result)
             self.progress_var.set("설치 완료. 게임을 다시 실행해 주세요.")
             if notify:
                 messagebox.showinfo("설치 완료", "한국어 패치가 적용되었습니다. 게임을 다시 실행해 주세요.")
         elif action == "restore":
             self.path_status_var.set("경로 확인됨")
             self.patch_status_var.set("원본 복구됨")
+            self.font_status_var.set("원본 폰트 상태로 복구됨")
             self.progress_var.set("복구 완료. 필요하면 Steam 파일 무결성 검사도 사용할 수 있습니다.")
             if notify:
                 messagebox.showinfo("복구 완료", "설치 시 생성된 백업으로 복구했습니다.")
@@ -341,12 +382,31 @@ class PatcherGui:
                 self._open_folder(path.parent)
             if notify:
                 messagebox.showinfo("다운로드 완료", f"최신 패처 ZIP을 저장했습니다.\n{path}")
+        elif action == "diagnose":
+            path = Path(str(result.get("path") or ""))
+            if path.exists():
+                self.progress_var.set(f"진단 리포트 저장 완료: {path.name}")
+                self._open_folder(path.parent)
+            if notify:
+                messagebox.showinfo("진단 리포트 저장", f"진단 리포트를 저장했습니다.\n{path}")
+        elif action == "export_patch":
+            output = Path(str(result.get("output_dir") or ""))
+            if output.exists():
+                self.progress_var.set(f"오프라인 패치 파일 생성 완료: {output}")
+                self._open_folder(output)
+            if notify:
+                messagebox.showinfo("오프라인 패치 파일 생성", f"패치된 파일을 별도 폴더에 만들었습니다.\n{output}")
+        elif action == "launch_game":
+            self.progress_var.set("Steam에 게임 실행을 요청했습니다.")
+            if notify:
+                messagebox.showinfo("게임 실행", "Steam에 Tales of Seikyu 실행을 요청했습니다.")
         self._sync_download_button()
 
     def _handle_error(self, action: str, message: str, notify: bool) -> None:
         if action == "verify":
             self.path_status_var.set("경로 확인 실패")
             self.patch_status_var.set("확인 불가")
+            self.font_status_var.set("확인 불가")
             self.progress_var.set("게임 폴더를 다시 선택하거나 Steam 파일 상태를 확인해 주세요.")
         elif action == "check_update":
             self.update_status_var.set("릴리스 확인 실패")
@@ -361,15 +421,24 @@ class PatcherGui:
     def _apply_verify_status(self, result: dict[str, Any]) -> None:
         self.path_status_var.set("경로 확인됨")
         status = result.get("status")
+        self._apply_font_status(result)
         if status == "patched":
             self.patch_status_var.set("한국어 패치 적용됨")
             self.progress_var.set("현재 게임 파일은 패치된 상태입니다.")
         else:
             excel_ok = result.get("excel_ok")
-            bag_ok = result.get("bag_ok")
-            detail = f"텍스트 {'OK' if excel_ok else '미적용'}, 폰트 {'OK' if bag_ok else '미적용'}"
+            font_ok = result.get("font_ok")
+            detail = f"텍스트 {'OK' if excel_ok else '미적용'}, 폰트 {'OK' if font_ok else '미적용'}"
             self.patch_status_var.set(f"미적용 또는 일부 적용 ({detail})")
             self.progress_var.set("설치/업데이트를 실행하면 현재 지원 파일에 패치를 적용합니다.")
+
+    def _apply_font_status(self, result: dict[str, Any]) -> None:
+        if result.get("font_ok"):
+            hits = result.get("font_fallback_hit_count", 0)
+            candidates = result.get("font_fallback_candidate_count", 0)
+            self.font_status_var.set(f"Fallback 연결됨 ({hits}/{candidates})")
+        else:
+            self.font_status_var.set("Fallback 미적용")
 
     def _apply_update_status(self, result: dict[str, Any]) -> None:
         latest = str(result.get("latest_tag") or "")
@@ -397,7 +466,7 @@ class PatcherGui:
 
 
 def main() -> int:
-    cli_flags = ("--install", "--restore", "--verify", "--check-update", "--download-update")
+    cli_flags = ("--install", "--restore", "--verify", "--check-update", "--download-update", "--diagnose", "--export-patch", "--launch-game")
     if "--no-gui" in sys.argv or any(flag in sys.argv for flag in cli_flags):
         return cli_main()
     PatcherGui().mainloop()

@@ -20,6 +20,13 @@ def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, cwd=str(cwd), env=env, text=True, encoding="utf-8", errors="replace", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
 
 
+def last_json(stdout: str) -> dict[str, object]:
+    for line in reversed([item.strip() for item in stdout.splitlines() if item.strip()]):
+        if line.startswith("{") and line.endswith("}"):
+            return json.loads(line)
+    raise ValueError(f"no JSON result in stdout: {stdout[-500:]}")
+
+
 def main() -> int:
     payload = REPO / "payload/patch_payload.json"
     data = json.loads(payload.read_text(encoding="utf-8"))
@@ -30,12 +37,34 @@ def main() -> int:
         shutil.copy2(EXCEL_SOURCE, target_dir / "configs_assets_excel_faab60dac21aead7056d09e73c9da19c.bundle")
         shutil.copy2(BAG_SOURCE, target_dir / "uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle")
 
+        export_dir = Path(temp) / "exported_patch"
+        export = run([sys.executable, "-m", "tos_ko_patcher.app", "--no-gui", "--game-data", str(data_root), "--payload", str(payload), "--export-patch", "--export-dir", str(export_dir)], REPO)
         install = run([sys.executable, "-m", "tos_ko_patcher.app", "--no-gui", "--game-data", str(data_root), "--payload", str(payload), "--install"], REPO)
         verify = run([sys.executable, "-m", "tos_ko_patcher.app", "--no-gui", "--game-data", str(data_root), "--payload", str(payload), "--verify"], REPO)
         restore = run([sys.executable, "-m", "tos_ko_patcher.app", "--no-gui", "--game-data", str(data_root), "--payload", str(payload), "--restore"], REPO)
 
-        if install.returncode or verify.returncode or restore.returncode:
-            print(json.dumps({"status": "fail", "install": install.stdout + install.stderr, "verify": verify.stdout + verify.stderr, "restore": restore.stdout + restore.stderr}, ensure_ascii=False))
+        if export.returncode or install.returncode or verify.returncode or restore.returncode:
+            print(
+                json.dumps(
+                    {
+                        "status": "fail",
+                        "export": export.stdout + export.stderr,
+                        "install": install.stdout + install.stderr,
+                        "verify": verify.stdout + verify.stderr,
+                        "restore": restore.stdout + restore.stderr,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+            return 1
+        export_result = last_json(export.stdout)
+        manifest = Path(str(export_result.get("manifest", "")))
+        if not manifest.exists() or len(export_result.get("files", [])) != 2:
+            print(json.dumps({"status": "fail", "reason": "export manifest/files missing", "export": export_result}, ensure_ascii=False))
+            return 1
+        verify_result = last_json(verify.stdout)
+        if not verify_result.get("font_ok"):
+            print(json.dumps({"status": "fail", "reason": "font_ok was not true", "verify": verify_result}, ensure_ascii=False))
             return 1
 
     print(
@@ -44,6 +73,7 @@ def main() -> int:
                 "status": "pass",
                 "excel_target_sha256": data["excel_bundle"]["target_sha256"],
                 "bag_target_sha256": data["bag_function_bundle"]["target_sha256"],
+                "font_ok": True,
             },
             ensure_ascii=False,
         )

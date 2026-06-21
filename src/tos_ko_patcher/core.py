@@ -20,11 +20,14 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.1-playtest.20260621"
+PATCH_VERSION = "0.1.2-playtest.20260621"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
+STEAM_APP_ID = "2340520"
+STEAM_APP_URL = f"steam://rungameid/{STEAM_APP_ID}"
+GAME_EXE_NAME = "Tales Of Seikyu.exe"
 DEFAULT_STEAM_DATA = Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Steam/steamapps/common/Tales of Seikyu/Tales Of Seikyu_Data"
 EXCEL_GLOB = "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_*.bundle"
 BAG_GLOB = "StreamingAssets/aa/StandaloneWindows64/uiview_assets_bagfunctionitem_*.bundle"
@@ -126,6 +129,77 @@ def sha256_file(path: Path) -> str:
 def default_download_dir() -> Path:
     downloads = Path.home() / "Downloads"
     return downloads if downloads.exists() else Path.home()
+
+
+def default_export_dir() -> Path:
+    return default_download_dir() / "TalesOfSeikyuKoreanPatch-export"
+
+
+def parse_acf_field(text: str, field: str) -> str:
+    match = re.search(rf'"{re.escape(field)}"\s+"([^"]+)"', text)
+    return match.group(1).replace("\\\\", "\\") if match else ""
+
+
+def steam_root_candidates() -> list[Path]:
+    candidates = [
+        Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Steam",
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Steam",
+    ]
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        candidates.append(Path(local) / "Steam")
+    seen: set[Path] = set()
+    result: list[Path] = []
+    for candidate in candidates:
+        resolved = candidate.expanduser()
+        if resolved not in seen:
+            seen.add(resolved)
+            result.append(resolved)
+    return result
+
+
+def steamapps_from_root(steam_root: Path) -> list[Path]:
+    steamapps = steam_root / "steamapps"
+    candidates = [steamapps]
+    libraryfolders = steamapps / "libraryfolders.vdf"
+    if libraryfolders.exists():
+        text = libraryfolders.read_text(encoding="utf-8", errors="ignore")
+        for path_text in re.findall(r'"path"\s+"([^"]+)"', text):
+            candidates.append(Path(path_text.replace("\\\\", "\\")) / "steamapps")
+    seen: set[Path] = set()
+    result: list[Path] = []
+    for candidate in candidates:
+        try:
+            resolved = candidate.expanduser().resolve()
+        except OSError:
+            resolved = candidate.expanduser()
+        if resolved not in seen:
+            seen.add(resolved)
+            result.append(resolved)
+    return result
+
+
+def discover_steam_game_data(steam_roots: list[Path] | None = None) -> Path | None:
+    for steam_root in steam_roots or steam_root_candidates():
+        for steamapps in steamapps_from_root(steam_root):
+            manifest = steamapps / f"appmanifest_{STEAM_APP_ID}.acf"
+            if not manifest.exists():
+                continue
+            text = manifest.read_text(encoding="utf-8", errors="ignore")
+            install_dir = parse_acf_field(text, "installdir") or "Tales of Seikyu"
+            game_root = steamapps / "common" / install_dir
+            data_dir = game_root / "Tales Of Seikyu_Data"
+            if (data_dir / "StreamingAssets").exists():
+                return data_dir.resolve()
+    return None
+
+
+def launch_game(log: Callable[[str], None] = log_noop) -> dict[str, Any]:
+    import webbrowser
+
+    opened = webbrowser.open(STEAM_APP_URL)
+    log(f"Steam 실행 요청: {STEAM_APP_URL}")
+    return {"status": "launch_requested" if opened else "launch_request_failed", "steam_url": STEAM_APP_URL, "appid": STEAM_APP_ID}
 
 
 def release_tag_key(tag: str) -> list[tuple[int, int | str]]:
@@ -444,7 +518,7 @@ def normalize_game_data(path: Path) -> Path:
 
 
 def default_game_data() -> Path:
-    return DEFAULT_STEAM_DATA
+    return discover_steam_game_data() or DEFAULT_STEAM_DATA
 
 
 def find_single_bundle(game_data: Path, pattern: str, expected_hashes: set[str]) -> Path:
@@ -581,6 +655,22 @@ def inspect_bag_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
         "external_file_id": file_id,
         "fallback_hits": fallback_hits,
         "font_fallback_ok": file_id is not None and any(item["has_fallback"] for item in fallback_hits),
+        "local_font_name": font_patch["local_font_name"],
+        "external_path": font_patch["external_path"],
+        "fallback_font_path_id": int(font_patch["fallback_font_path_id"]),
+    }
+
+
+def font_status_from_inspection(inspection: dict[str, Any]) -> dict[str, Any]:
+    fallback_hits = inspection.get("fallback_hits") or []
+    fallback_count = sum(1 for item in fallback_hits if item.get("has_fallback"))
+    return {
+        "font_ok": bool(inspection.get("font_fallback_ok")),
+        "font_local_name": inspection.get("local_font_name") or "",
+        "font_external_file_id": inspection.get("external_file_id"),
+        "font_fallback_hit_count": fallback_count,
+        "font_fallback_candidate_count": len(fallback_hits),
+        "font_fallback_path_id": inspection.get("fallback_font_path_id"),
     }
 
 
@@ -630,6 +720,108 @@ def apply_bag_font_patch(game_data: Path, bundle: Path, payload: dict[str, Any],
     return new_digest
 
 
+def build_patched_excel_copy(bundle: Path, output_bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
+    digest = sha256_file(bundle)
+    excel = payload["excel_bundle"]
+    accepted = set(excel.get("accepted_patched_sha256", [])) | {excel.get("target_sha256", "")}
+    if digest in accepted:
+        copy_with_parent(bundle, output_bundle)
+        return sha256_file(output_bundle)
+    if digest != excel["source_sha256"]:
+        raise PatchError(f"지원하지 않는 Excel 번들 해시입니다: {digest}")
+    planned, changed = planned_excel_textassets(bundle, payload)
+    log(f"오프라인 Excel TextAsset 변경 행: {changed}")
+    with tempfile.TemporaryDirectory(prefix="tos-ko-export-excel-") as temp:
+        saved = save_textassets_to_bundle(bundle, Path(temp), planned)
+        copy_with_parent(saved, output_bundle)
+    new_digest = sha256_file(output_bundle)
+    accepted_after = set(excel.get("accepted_patched_sha256", [])) | {excel["target_sha256"]}
+    if new_digest not in accepted_after:
+        raise PatchError(f"오프라인 Excel 출력 해시 검증 실패: {new_digest}")
+    return new_digest
+
+
+def build_patched_bag_copy(bundle: Path, output_bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
+    digest = sha256_file(bundle)
+    bag = payload["bag_function_bundle"]
+    accepted = set(bag.get("accepted_patched_sha256", [])) | {bag.get("target_sha256", "")}
+    if digest in accepted and inspect_bag_font(bundle, payload)["font_fallback_ok"]:
+        copy_with_parent(bundle, output_bundle)
+        return sha256_file(output_bundle)
+    if digest != bag["source_sha256"]:
+        raise PatchError(f"지원하지 않는 가방 UI 번들 해시입니다: {digest}")
+
+    font_patch = bag["font_patch"]
+    env = UnityPy.load(str(bundle))
+    asset = env.assets[0]
+    file_id, external_added = ensure_external(asset, font_patch["external_path"])
+    fallback_changed = 0
+    for obj in env.objects:
+        if obj.type.name != "MonoBehaviour":
+            continue
+        try:
+            tree = obj.read_typetree()
+        except Exception:
+            continue
+        if tree.get("m_Name") != font_patch["local_font_name"]:
+            continue
+        table = tree.setdefault("m_FallbackFontAssetTable", [])
+        if has_ptr(table, file_id, int(font_patch["fallback_font_path_id"])):
+            continue
+        table.append({"m_FileID": file_id, "m_PathID": int(font_patch["fallback_font_path_id"])})
+        obj.save_typetree(tree)
+        fallback_changed += 1
+    log(f"오프라인 가방 UI 폰트 fallback 변경: {fallback_changed}, external_added={external_added}")
+    with tempfile.TemporaryDirectory(prefix="tos-ko-export-bag-") as temp:
+        env.save(out_path=temp)
+        saved = Path(temp) / bundle.name
+        if not saved.exists():
+            raise PatchError("오프라인 가방 UI 번들 저장 결과를 찾지 못했습니다.")
+        copy_with_parent(saved, output_bundle)
+    new_digest = sha256_file(output_bundle)
+    accepted_after = set(bag.get("accepted_patched_sha256", [])) | {bag["target_sha256"]}
+    if new_digest not in accepted_after:
+        raise PatchError(f"오프라인 가방 UI 출력 해시 검증 실패: {new_digest}")
+    return new_digest
+
+
+def export_patch_files(
+    game_data_path: Path,
+    output_dir: Path | None = None,
+    payload_path: Path | None = None,
+    log: Callable[[str], None] = log_noop,
+) -> dict[str, Any]:
+    payload = load_payload(payload_path)
+    game_data = normalize_game_data(game_data_path)
+    target_root = (output_dir or default_export_dir()).expanduser().resolve()
+    excel_hashes = {payload["excel_bundle"]["source_sha256"], payload["excel_bundle"]["target_sha256"], *payload["excel_bundle"].get("accepted_patched_sha256", [])}
+    bag_hashes = {payload["bag_function_bundle"]["source_sha256"], payload["bag_function_bundle"]["target_sha256"], *payload["bag_function_bundle"].get("accepted_patched_sha256", [])}
+    excel_bundle = find_single_bundle(game_data, payload["excel_bundle"]["glob"], excel_hashes)
+    bag_bundle = find_single_bundle(game_data, payload["bag_function_bundle"]["glob"], bag_hashes)
+    excel_rel = excel_bundle.relative_to(game_data)
+    bag_rel = bag_bundle.relative_to(game_data)
+    excel_out = target_root / excel_rel
+    bag_out = target_root / bag_rel
+    excel_hash = build_patched_excel_copy(excel_bundle, excel_out, payload, log)
+    bag_hash = build_patched_bag_copy(bag_bundle, bag_out, payload, log)
+    manifest = {
+        "status": "exported",
+        "patch_version": payload["patch_version"],
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "source_game_data": str(game_data),
+        "output_dir": str(target_root),
+        "files": [
+            {"relative_path": str(excel_rel).replace("\\", "/"), "sha256": excel_hash},
+            {"relative_path": str(bag_rel).replace("\\", "/"), "sha256": bag_hash},
+        ],
+        "note": "사용자 PC의 원본 게임 파일에서 생성한 패치 결과입니다. 이 폴더를 그대로 재배포하지 마세요.",
+    }
+    manifest_path = target_root / "PATCH_EXPORT_MANIFEST.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {**manifest, "manifest": str(manifest_path)}
+
+
 def install_patch(game_data_path: Path, payload_path: Path | None = None, log: Callable[[str], None] = log_noop) -> dict[str, Any]:
     payload = load_payload(payload_path)
     game_data = normalize_game_data(game_data_path)
@@ -640,8 +832,9 @@ def install_patch(game_data_path: Path, payload_path: Path | None = None, log: C
     bag_bundle = find_single_bundle(game_data, payload["bag_function_bundle"]["glob"], bag_hashes)
     excel_after = apply_excel_patch(game_data, excel_bundle, payload, log)
     bag_after = apply_bag_font_patch(game_data, bag_bundle, payload, log)
+    font_status = font_status_from_inspection(inspect_bag_font(bag_bundle, payload))
     write_state(game_data, payload, excel_bundle, bag_bundle, excel_after, bag_after)
-    return {"status": "installed", "excel_sha256": excel_after, "bag_sha256": bag_after, "game_data": str(game_data)}
+    return {"status": "installed", "excel_sha256": excel_after, "bag_sha256": bag_after, "game_data": str(game_data), **font_status}
 
 
 def write_state(game_data: Path, payload: dict[str, Any], excel_bundle: Path, bag_bundle: Path, excel_hash: str, bag_hash: str) -> None:
@@ -668,17 +861,49 @@ def verify_patch(game_data_path: Path, payload_path: Path | None = None, log: Ca
     excel_hash = sha256_file(excel_bundle)
     bag_hash = sha256_file(bag_bundle)
     excel_ok = excel_hash in ({payload["excel_bundle"]["target_sha256"]} | set(payload["excel_bundle"].get("accepted_patched_sha256", [])))
-    bag_ok = bag_hash in ({payload["bag_function_bundle"]["target_sha256"]} | set(payload["bag_function_bundle"].get("accepted_patched_sha256", []))) and inspect_bag_font(bag_bundle, payload)["font_fallback_ok"]
+    font_inspection = inspect_bag_font(bag_bundle, payload)
+    font_status = font_status_from_inspection(font_inspection)
+    bag_ok = bag_hash in ({payload["bag_function_bundle"]["target_sha256"]} | set(payload["bag_function_bundle"].get("accepted_patched_sha256", []))) and bool(
+        font_status["font_ok"]
+    )
     result = {
         "status": "patched" if excel_ok and bag_ok else "not_patched",
         "excel_sha256": excel_hash,
         "bag_sha256": bag_hash,
         "excel_ok": excel_ok,
         "bag_ok": bag_ok,
+        **font_status,
         "game_data": str(game_data),
     }
     log(json.dumps(result, ensure_ascii=False))
     return result
+
+
+def build_diagnostic_report(game_data_path: Path, payload_path: Path | None = None) -> dict[str, Any]:
+    payload = load_payload(payload_path)
+    report: dict[str, Any] = {
+        "patcher_version": PATCH_VERSION,
+        "patcher_tag": PATCH_TAG,
+        "payload_version": payload.get("patch_version", ""),
+        "steam_app_id": STEAM_APP_ID,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "requested_game_data": str(game_data_path),
+        "discovered_steam_game_data": str(discover_steam_game_data() or ""),
+    }
+    try:
+        report["verify"] = verify_patch(game_data_path, payload_path)
+        report["status"] = "ok"
+    except Exception as exc:  # noqa: BLE001 - diagnostics should capture user-facing failures.
+        report["status"] = "error"
+        report["error"] = str(exc)
+    return report
+
+
+def write_diagnostic_report(game_data_path: Path, output_path: Path, payload_path: Path | None = None) -> dict[str, Any]:
+    report = build_diagnostic_report(game_data_path, payload_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {**report, "path": str(output_path)}
 
 
 def restore_patch(game_data_path: Path, payload_path: Path | None = None, log: Callable[[str], None] = log_noop) -> dict[str, Any]:
@@ -721,6 +946,11 @@ def build_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument("--check-update", action="store_true", help="GitHub 최신 패처 릴리스를 확인합니다.")
     parser.add_argument("--download-update", action="store_true", help="GitHub 최신 패처 ZIP을 다운로드합니다.")
     parser.add_argument("--download-dir", default="", help="최신 패처 ZIP을 저장할 폴더")
+    parser.add_argument("--diagnose", action="store_true", help="진단 리포트를 출력하거나 저장합니다.")
+    parser.add_argument("--diagnostic-out", default="", help="진단 리포트 JSON 저장 경로")
+    parser.add_argument("--export-patch", action="store_true", help="게임 폴더를 직접 수정하지 않고 패치된 파일을 별도 폴더에 생성합니다.")
+    parser.add_argument("--export-dir", default="", help="오프라인 패치 파일 출력 폴더")
+    parser.add_argument("--launch-game", action="store_true", help="Steam을 통해 Tales of Seikyu 실행을 요청합니다.")
     parser.add_argument("--no-gui", action="store_true", help="GUI 없이 명령줄 결과만 출력합니다.")
     return parser
 
@@ -747,8 +977,20 @@ def cli_main(argv: list[str] | None = None) -> int:
         elif args.download_update:
             download_dir = Path(args.download_dir).resolve() if args.download_dir else None
             result = download_latest_release(download_dir, log)
+        elif args.diagnose:
+            if args.diagnostic_out:
+                result = write_diagnostic_report(game_data, Path(args.diagnostic_out).resolve(), payload)
+            else:
+                result = build_diagnostic_report(game_data, payload)
+        elif args.export_patch:
+            export_dir = Path(args.export_dir).resolve() if args.export_dir else None
+            result = export_patch_files(game_data, export_dir, payload, log)
+        elif args.launch_game:
+            result = launch_game(log)
         else:
-            parser.error("one of --install, --restore, --verify, --check-update, or --download-update is required when --no-gui is used")
+            parser.error(
+                "one of --install, --restore, --verify, --check-update, --download-update, --diagnose, --export-patch, or --launch-game is required when --no-gui is used"
+            )
             return 2
         print(json.dumps(result, ensure_ascii=False))
         return 0

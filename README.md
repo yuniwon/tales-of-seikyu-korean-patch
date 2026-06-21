@@ -8,19 +8,25 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 - 게임: Tales of Seikyu
 - 플랫폼: Steam Windows
-- 패치 버전: `0.1.1-playtest.20260621`
-- 지원 방식: 로컬 원본 파일에 패치 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드
+- 패치 버전: `0.1.2-playtest.20260621`
+- 지원 방식: 로컬 원본 파일에 패치 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드, 진단 리포트 저장
 
 ## 설치
 
 1. GitHub Releases에서 최신 ZIP을 다운로드합니다.
 2. 압축을 풉니다.
 3. `TalesOfSeikyuKoreanPatch.exe`를 실행합니다.
-4. 게임 폴더가 자동으로 잡히지 않으면 `게임 폴더 찾기`로 `Tales Of Seikyu_Data` 폴더 또는 게임 설치 폴더를 선택합니다.
+4. 게임 폴더가 자동으로 잡히지 않으면 `게임 폴더 찾기`로 `Tales Of Seikyu_Data` 폴더 또는 게임 설치 폴더를 선택합니다. Steam 추가 라이브러리도 자동 탐색합니다.
 5. `한국어 패치 설치/업데이트`를 누릅니다.
 6. 완료 후 게임을 완전히 다시 실행합니다.
 
-패처 첫 화면에서는 게임 경로, 패치 적용 상태, 최신 패처 릴리스 상태를 자동으로 확인합니다.
+패처 첫 화면에서는 게임 경로, 패치 적용 상태, 폰트 fallback 상태, 최신 패처 릴리스 상태를 자동으로 확인합니다.
+
+## 폰트 적용 방식
+
+현재 배포본은 별도 폰트 파일을 재배포하지 않습니다. 게임에 이미 포함된 CJK 폰트를 가방 UI의 TextMeshPro fallback으로 연결하고, `폰트 상태` 카드와 검증 결과의 `font_ok` 값으로 적용 여부를 확인합니다.
+
+폰트 상태가 `Fallback 미적용`으로 보이면 `한국어 패치 설치/업데이트`를 다시 실행해 주세요.
 
 Steam 경로 확인:
 
@@ -31,6 +37,12 @@ Steam 경로 확인:
 `최신 패처 확인`은 GitHub Releases의 최신 릴리스를 조회합니다.
 
 `최신 패처 다운로드`는 최신 ZIP 파일을 사용자 다운로드 폴더에 저장하고 폴더를 엽니다. 실행 중인 패처 EXE를 자동으로 덮어쓰거나, 다운로드한 파일을 자동 실행하지 않습니다. 새 ZIP을 받은 뒤에는 압축을 풀고 새 `TalesOfSeikyuKoreanPatch.exe`를 실행해 주세요.
+
+## 편의 기능
+
+- `게임 실행`: Steam을 통해 Tales of Seikyu 실행을 요청합니다.
+- `진단 리포트 저장`: 게임 경로, 패치 해시, 폰트 fallback 상태, 오류 메시지를 JSON으로 저장합니다.
+- `오프라인 패치 파일 만들기`: 게임 폴더를 직접 수정하지 않고, 현재 PC의 원본 파일에서 패치된 번들을 별도 폴더에 생성합니다. 보안 프로그램이나 샌드박스 환경에서 결과물을 먼저 확인하고 싶을 때 쓰는 개발/고급 사용자용 기능입니다.
 
 ## 복구
 
@@ -51,6 +63,7 @@ Steam 경로 확인:
 ```powershell
 $env:PYTHONUTF8='1'
 python tools\generate_payload.py
+python tools\test_patcher_features.py
 python tools\test_update_logic.py
 python tools\run_temp_baseline_test.py
 python tools\build_release.py
@@ -64,6 +77,7 @@ python tools\scan_release_assets.py
 $env:PYTHONPATH='src'
 python -m tos_ko_patcher.app --no-gui --game-data "C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data" --verify
 python -m tos_ko_patcher.app --no-gui --check-update
+python -m tos_ko_patcher.app --no-gui --diagnose --diagnostic-out ".\tos-ko-diagnostic.json"
 ```
 
 ## 면책
