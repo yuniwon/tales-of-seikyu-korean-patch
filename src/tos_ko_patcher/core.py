@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.4-playtest.20260623"
+PATCH_VERSION = "0.1.5-playtest.20260624"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -539,15 +539,55 @@ def state_dir(game_data: Path) -> Path:
     return game_data / PATCH_STATE_DIR
 
 
+def backup_role(source: Path) -> str:
+    name = source.name.lower()
+    if name.startswith("configs_assets_excel_"):
+        return "excel"
+    if name.startswith("uiview_assets_bagfunctionitem_"):
+        return "bag"
+    return re.sub(r"[^a-z0-9]+", "_", source.stem.lower()).strip("_")[:24] or "bundle"
+
+
+def short_backup_name(source: Path, digest: str) -> str:
+    return f"{backup_role(source)}.{digest[:16]}.bak"
+
+
+def legacy_backup_name(source: Path, digest: str) -> str:
+    return f"{source.name}.{digest}.bak"
+
+
+def backup_path_for(game_data: Path, source: Path, digest: str) -> Path:
+    return state_dir(game_data) / "backups" / PATCH_VERSION / short_backup_name(source, digest)
+
+
 def backup_file(game_data: Path, source: Path, digest: str, log: Callable[[str], None]) -> Path:
-    backup = state_dir(game_data) / "backups" / PATCH_VERSION / f"{source.name}.{digest}.bak"
+    backup = backup_path_for(game_data, source, digest)
     if not backup.exists():
         backup.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, backup)
+        try:
+            shutil.copy2(source, backup)
+        except OSError as exc:
+            raise PatchError(f"백업 파일을 만들 수 없습니다: {backup}\n원문 오류: {exc}") from exc
         log(f"백업 생성: {backup}")
     else:
         log(f"기존 백업 사용: {backup}")
     return backup
+
+
+def backup_candidates(game_data: Path, bundle: Path, expected_digest: str) -> list[Path]:
+    backup_root = state_dir(game_data) / "backups"
+    patterns = [
+        f"**/{short_backup_name(bundle, expected_digest)}",
+        f"**/{legacy_backup_name(bundle, expected_digest)}",
+    ]
+    candidates: list[Path] = []
+    seen: set[Path] = set()
+    for pattern in patterns:
+        for candidate in sorted(backup_root.glob(pattern)):
+            if candidate not in seen:
+                seen.add(candidate)
+                candidates.append(candidate)
+    return candidates
 
 
 def copy_with_parent(source: Path, target: Path) -> None:
@@ -1021,7 +1061,7 @@ def restore_patch(game_data_path: Path, payload_path: Path | None = None, log: C
         ("excel", excel_bundle, payload["excel_bundle"]["source_sha256"]),
         ("bag", bag_bundle, payload["bag_function_bundle"]["source_sha256"]),
     ]:
-        candidates = sorted((state_dir(game_data) / "backups").glob(f"**/{bundle.name}.{expected}.bak"))
+        candidates = backup_candidates(game_data, bundle, expected)
         if not candidates:
             raise PatchError(f"{key} 원본 백업을 찾지 못했습니다. Steam 파일 무결성 검사를 사용해 주세요.")
         copy_with_parent(candidates[-1], bundle)

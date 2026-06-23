@@ -6,14 +6,14 @@ Tales of Seikyu 비공식 한글패치 배포 안내입니다.
 
 ## 1) 최신 버전
 
-- 패치 버전: `0.1.4-playtest.20260623`
+- 패치 버전: `0.1.5-playtest.20260624`
 - 지원 플랫폼: Steam Windows
 - 대상 게임 버전/buildid: Steam buildid `23869434`
 - 최근 갱신일: 2026-06-23
 
 ## 2) 다운로드
 
-GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.4-playtest.20260623.zip`을 다운로드해 주세요.
+GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.5-playtest.20260624.zip`을 다운로드해 주세요.
 
 다른 곳으로 공유할 때는 파일 재업로드 대신 이 저장소/릴리스 링크를 공유해 주세요.
 
@@ -40,6 +40,10 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.4-playtest.20260623.zip`을
 
 ## 5) 이번 패처 수정 사항
 
+- 일부 PC에서 설치 중 `지정된 경로를 찾을 수 없습니다` 오류가 뜰 수 있던 백업 경로 문제를 수정했습니다.
+- 백업 파일명을 짧은 형식으로 바꿔 기본 Steam 경로 기준 Excel 백업 경로를 262자에서 159자로 줄였습니다.
+- v0.1.4 이전 긴 백업 파일명도 `원본 복구`에서 계속 인식합니다.
+- 경로 관련 Windows 오류가 뜰 때 더 알아보기 쉬운 안내 문구를 표시합니다.
 - v0.1.3 설치 후 설정 화면의 한국어가 네모로 깨지던 문제를 수정했습니다.
 - 설정 UI TextAsset `i18n_uiconfig_japanese`의 `line_seed_jp` alias 94개를 `zh_cn_serif`로 교체합니다.
 - 가방 UI TMP fallback뿐 아니라 설정 UI font alias까지 검증해야 `font_ok=true`가 되도록 보강했습니다.

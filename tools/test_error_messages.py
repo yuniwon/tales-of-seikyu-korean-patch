@@ -7,7 +7,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
-from tos_ko_patcher.app import GAME_UPDATED_NOTICE, is_game_update_error, user_facing_error_message  # noqa: E402
+from tos_ko_patcher.app import GAME_UPDATED_NOTICE, PATH_ERROR_NOTICE, is_game_update_error, user_facing_error_message  # noqa: E402
 
 
 def main() -> int:
@@ -16,16 +16,19 @@ def main() -> int:
         "지원하지 않는 Excel 번들 해시입니다: abc",
         "지원하지 않는 가방 UI 번들 해시입니다: abc",
     ]
+    path_error = "[WinError 3] 지정된 경로를 찾을 수 없습니다: 'C:\\very\\long\\path'"
     passthrough = "Tales Of Seikyu_Data 폴더를 찾을 수 없습니다."
     checks = {
         "notice": GAME_UPDATED_NOTICE,
         "update_errors_detected": [is_game_update_error(item) for item in update_errors],
         "update_messages": [user_facing_error_message(item) for item in update_errors],
+        "path_message": user_facing_error_message(path_error),
         "passthrough": user_facing_error_message(passthrough),
     }
     ok = (
         all(checks["update_errors_detected"])
         and all(item == GAME_UPDATED_NOTICE for item in checks["update_messages"])
+        and checks["path_message"].startswith(PATH_ERROR_NOTICE)
         and checks["passthrough"] == passthrough
     )
     print(json.dumps({"status": "pass" if ok else "fail", **checks}, ensure_ascii=False))

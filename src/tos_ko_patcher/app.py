@@ -44,10 +44,16 @@ DANGER = "#ef6461"
 SUCCESS = "#59c27d"
 WARN = "#f0b45a"
 GAME_UPDATED_NOTICE = "게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다"
+PATH_ERROR_NOTICE = "선택한 게임 폴더 또는 백업 경로를 찾을 수 없습니다. 게임 폴더 찾기로 Tales Of Seikyu_Data 폴더를 다시 지정해 주세요."
 GAME_UPDATE_ERROR_MARKERS = (
     "지원되는 해시의 번들을 찾지 못했습니다",
     "지원하지 않는 Excel 번들 해시입니다",
     "지원하지 않는 가방 UI 번들 해시입니다",
+)
+PATH_ERROR_MARKERS = (
+    "지정된 경로를 찾을 수 없습니다",
+    "WinError 3",
+    "No such file or directory",
 )
 
 
@@ -58,6 +64,8 @@ def is_game_update_error(message: str) -> bool:
 def user_facing_error_message(message: str) -> str:
     if is_game_update_error(message):
         return GAME_UPDATED_NOTICE
+    if any(marker in message for marker in PATH_ERROR_MARKERS):
+        return f"{PATH_ERROR_NOTICE}\n\n상세 오류: {message}"
     return message
 
 
