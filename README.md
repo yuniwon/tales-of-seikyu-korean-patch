@@ -8,7 +8,9 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 - 게임: Tales of Seikyu
 - 플랫폼: Steam Windows
-- 패치 버전: `0.1.2-playtest.20260621`
+- 패치 버전: `0.1.3-playtest.20260623`
+- 지원 Steam buildid: `23869434`
+- 지원 Excel 원본 해시: `c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9`
 - 지원 방식: 로컬 원본 파일에 패치 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드, 진단 리포트 저장
 
 ## 설치
@@ -57,6 +59,15 @@ Steam 경로 확인:
 - 현재 배포본은 Steam Windows의 확인된 번들 해시에만 적용됩니다.
 - 게임 업데이트로 번들 해시가 바뀌면 패처가 설치를 거부할 수 있습니다. 이 경우 새 패치 버전이 필요합니다.
 - 일부 문장/화면은 플레이테스트를 통해 계속 다듬는 중입니다.
+
+## v0.1.3 Hotfix
+
+Steam buildid `23869434`에서 Excel Addressables 번들 파일명과 SHA256이 바뀌어 이전 패처가 설치를 거부하던 문제를 수정했습니다.
+
+- 새 원본 번들: `configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle`
+- 새 원본 SHA256: `c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9`
+- 새 패치 결과 SHA256: `6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f`
+- 기존 번역 22,486행은 모두 유지했습니다. 이 중 6행은 row_key 기준으로 새 row_id에 재매핑했고, 1행은 원문 공백 변화로 새 key에 재매핑했습니다.
 
 ## 개발자용 명령
 

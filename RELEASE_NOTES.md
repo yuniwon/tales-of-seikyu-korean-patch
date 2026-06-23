@@ -6,14 +6,14 @@ Tales of Seikyu 비공식 한글패치 배포 안내입니다.
 
 ## 1) 최신 버전
 
-- 패치 버전: `0.1.2-playtest.20260621`
+- 패치 버전: `0.1.3-playtest.20260623`
 - 지원 플랫폼: Steam Windows
-- 대상 게임 버전/buildid: 2026년 6월 17일 이후 현재 로컬 검증 빌드의 확인된 Addressables 번들 해시
-- 최근 갱신일: 2026-06-21
+- 대상 게임 버전/buildid: Steam buildid `23869434`
+- 최근 갱신일: 2026-06-23
 
 ## 2) 다운로드
 
-GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.2-playtest.20260621.zip`을 다운로드해 주세요.
+GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.3-playtest.20260623.zip`을 다운로드해 주세요.
 
 다른 곳으로 공유할 때는 파일 재업로드 대신 이 저장소/릴리스 링크를 공유해 주세요.
 
@@ -38,7 +38,16 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.2-playtest.20260621.zip`을
 
 복원이 정상적으로 되지 않는다면 Steam 파일 무결성 검사를 사용해 주세요.
 
-## 5) 이번 패처 개선 사항
+## 5) 이번 패처 수정 사항
+
+- Steam buildid `23869434`에서 Excel Addressables 번들 파일명과 SHA256이 바뀌어 이전 패처가 설치를 거부하던 문제를 수정했습니다.
+- 새 원본 번들 `configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle`을 지원합니다.
+- 새 원본 SHA256은 `c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9`입니다.
+- 새 패치 결과 SHA256은 `6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f`입니다.
+- 기존 번역 22,486행은 모두 유지했습니다.
+- 이 중 6행은 row_key 기준으로 새 row_id에 재매핑했고, 1행은 원문 공백 변화로 새 key에 재매핑했습니다.
+
+## 6) 기존 패처 개선 사항
 
 - 스타샌드 아일랜드 로컬 한글패치 배포본의 UX를 참고해, 상태 확인과 진단 기능을 보강했습니다.
 - 첫 화면에 게임 경로, 패치 적용 상태, GitHub 최신 릴리스 상태를 표시합니다.
@@ -52,7 +61,7 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.2-playtest.20260621.zip`을
 - 작업 로그 저장 기능을 추가했습니다.
 - 명령줄에서도 `--check-update`, `--download-update`, `--diagnose`, `--export-patch`, `--launch-game`을 사용할 수 있습니다.
 
-## 6) 자동으로 진행되는 패치 작업
+## 7) 자동으로 진행되는 패치 작업
 
 - 게임 설치 경로 확인
 - 지원 번들 해시 확인
@@ -63,7 +72,7 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.2-playtest.20260621.zip`을
 
 패치 파일에는 완성된 게임 원본 번들 전체가 들어 있지 않습니다. 사용자 PC에 설치된 원본 게임 파일에 한글 텍스트를 적용하는 방식입니다.
 
-## 7) 주요 번역 범위
+## 8) 주요 번역 범위
 
 - 시스템/UI
 - 메뉴/설정
@@ -74,13 +83,13 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.2-playtest.20260621.zip`을
 - 일지/기록물/로어
 - 기타 문자열
 
-## 8) 알려진 이슈
+## 9) 알려진 이슈
 
 - 게임 업데이트로 파일 구조나 해시가 바뀌면 패치가 동작하지 않을 수 있습니다.
 - 일부 문장은 실제 플레이 문맥을 보며 계속 다듬는 중입니다.
 - 아직 충분히 플레이테스트하지 못한 화면에서 줄넘침이나 문맥 어색함이 있을 수 있습니다.
 
-## 9) 플레이테스트 제보
+## 10) 플레이테스트 제보
 
 아래 유형을 발견하면 스크린샷과 함께 제보해 주세요.
 
@@ -93,7 +102,7 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.2-playtest.20260621.zip`을
 - 고유명사 표기 흔들림
 - 설치 실패 또는 패처 오류
 
-## 10) 안내 및 면책
+## 11) 안내 및 면책
 
 - 본 패치는 비공식 팬 번역이며 개발사/퍼블리셔와 무관합니다.
 - 게임 원본 파일 및 권리는 각 권리자에게 있습니다.

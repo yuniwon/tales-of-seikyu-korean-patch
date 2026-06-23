@@ -9,7 +9,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
 EXE = REPO / "dist/TalesOfSeikyuKoreanPatch.exe"
-EXCEL_SOURCE = SRC_GAME_DATA / ".korean_patch/backups/configs_assets_excel_faab60dac21aead7056d09e73c9da19c.bundle.5d50ce6257b1d8ca8231f59abe183da0968fd4297d943f1527a7e523be291595.bak"
+EXCEL_SOURCE = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle"
 BAG_SOURCE = SRC_GAME_DATA / ".korean_patch/backups/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle.43f3dbeb5cc829e9fd282b19bb3a6155de4a7769459296db8a48390be27bfc85.visual_lqa_351.bak"
 
 
@@ -32,7 +32,7 @@ def main() -> int:
         data_root = Path(temp) / "Tales Of Seikyu_Data"
         target_dir = data_root / "StreamingAssets/aa/StandaloneWindows64"
         target_dir.mkdir(parents=True)
-        shutil.copy2(EXCEL_SOURCE, target_dir / "configs_assets_excel_faab60dac21aead7056d09e73c9da19c.bundle")
+        shutil.copy2(EXCEL_SOURCE, target_dir / EXCEL_SOURCE.name)
         shutil.copy2(BAG_SOURCE, target_dir / "uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle")
         export_dir = Path(temp) / "exported_patch"
         export = run([str(EXE), "--no-gui", "--game-data", str(data_root), "--export-patch", "--export-dir", str(export_dir)])
