@@ -43,6 +43,22 @@ ACCENT_HOVER = "#719cff"
 DANGER = "#ef6461"
 SUCCESS = "#59c27d"
 WARN = "#f0b45a"
+GAME_UPDATED_NOTICE = "게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다"
+GAME_UPDATE_ERROR_MARKERS = (
+    "지원되는 해시의 번들을 찾지 못했습니다",
+    "지원하지 않는 Excel 번들 해시입니다",
+    "지원하지 않는 가방 UI 번들 해시입니다",
+)
+
+
+def is_game_update_error(message: str) -> bool:
+    return any(marker in message for marker in GAME_UPDATE_ERROR_MARKERS)
+
+
+def user_facing_error_message(message: str) -> str:
+    if is_game_update_error(message):
+        return GAME_UPDATED_NOTICE
+    return message
 
 
 class PatcherGui:
@@ -416,7 +432,7 @@ class PatcherGui:
         else:
             self.progress_var.set("작업에 실패했습니다. 로그를 확인해 주세요.")
         if notify:
-            messagebox.showerror("오류", message)
+            messagebox.showerror("오류", user_facing_error_message(message))
 
     def _apply_verify_status(self, result: dict[str, Any]) -> None:
         self.path_status_var.set("경로 확인됨")

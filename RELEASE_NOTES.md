@@ -40,6 +40,7 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.3-playtest.20260623.zip`을
 
 ## 5) 이번 패처 수정 사항
 
+- 동일 버전 재업로드: 지원하지 않는 게임 업데이트 해시를 감지하면 `게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다` 안내 창을 표시합니다.
 - Steam buildid `23869434`에서 Excel Addressables 번들 파일명과 SHA256이 바뀌어 이전 패처가 설치를 거부하던 문제를 수정했습니다.
 - 새 원본 번들 `configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle`을 지원합니다.
 - 새 원본 SHA256은 `c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9`입니다.
