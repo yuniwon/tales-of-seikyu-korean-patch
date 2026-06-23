@@ -187,7 +187,7 @@ class PatcherGui:
         self.log.pack(fill=BOTH, expand=True)
         self._log("게임을 완전히 종료한 뒤 설치/복구를 진행해 주세요.")
         self._log("최신 패처 확인은 GitHub Releases를 조회하고, 다운로드는 ZIP 파일 저장까지만 진행합니다.")
-        self._log("폰트는 게임 내 CJK 폰트 fallback 연결 상태를 별도로 검증합니다.")
+        self._log("폰트는 게임 내 CJK 폰트 fallback과 설정 UI font alias를 별도로 검증합니다.")
 
     def _status_card(self, parent: ttk.Frame, title: str, variable: StringVar) -> ttk.Frame:
         frame = ttk.Frame(parent, style="Panel.TFrame", padding=14)
@@ -452,7 +452,11 @@ class PatcherGui:
         if result.get("font_ok"):
             hits = result.get("font_fallback_hit_count", 0)
             candidates = result.get("font_fallback_candidate_count", 0)
-            self.font_status_var.set(f"Fallback 연결됨 ({hits}/{candidates})")
+            aliases = result.get("korean_ui_font_alias_count", 0)
+            self.font_status_var.set(f"Fallback+UI OK ({hits}/{candidates}, alias {aliases})")
+        elif result.get("bag_font_ok"):
+            old_aliases = result.get("old_ui_font_alias_count", 0)
+            self.font_status_var.set(f"UI alias 미적용 ({old_aliases})")
         else:
             self.font_status_var.set("Fallback 미적용")
 

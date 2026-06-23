@@ -9,7 +9,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
-EXCEL_SOURCE = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle"
+EXCEL_BUNDLE_NAME = "configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle"
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.3-playtest.20260623/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle.c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9.bak"
 BAG_SOURCE = SRC_GAME_DATA / ".korean_patch/backups/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle.43f3dbeb5cc829e9fd282b19bb3a6155de4a7769459296db8a48390be27bfc85.visual_lqa_351.bak"
 
 
@@ -34,7 +35,7 @@ def main() -> int:
         data_root = Path(temp) / "Tales Of Seikyu_Data"
         target_dir = data_root / "StreamingAssets/aa/StandaloneWindows64"
         target_dir.mkdir(parents=True)
-        shutil.copy2(EXCEL_SOURCE, target_dir / EXCEL_SOURCE.name)
+        shutil.copy2(EXCEL_SOURCE, target_dir / EXCEL_BUNDLE_NAME)
         shutil.copy2(BAG_SOURCE, target_dir / "uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle")
 
         export_dir = Path(temp) / "exported_patch"
@@ -63,7 +64,7 @@ def main() -> int:
             print(json.dumps({"status": "fail", "reason": "export manifest/files missing", "export": export_result}, ensure_ascii=False))
             return 1
         verify_result = last_json(verify.stdout)
-        if not verify_result.get("font_ok"):
+        if not verify_result.get("font_ok") or not verify_result.get("ui_font_alias_ok"):
             print(json.dumps({"status": "fail", "reason": "font_ok was not true", "verify": verify_result}, ensure_ascii=False))
             return 1
 
@@ -74,6 +75,7 @@ def main() -> int:
                 "excel_target_sha256": data["excel_bundle"]["target_sha256"],
                 "bag_target_sha256": data["bag_function_bundle"]["target_sha256"],
                 "font_ok": True,
+                "ui_font_alias_ok": True,
             },
             ensure_ascii=False,
         )

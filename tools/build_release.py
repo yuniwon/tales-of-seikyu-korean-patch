@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.1.3-playtest.20260623"
+VERSION = "0.1.4-playtest.20260623"
 EXE_NAME = "TalesOfSeikyuKoreanPatch.exe"
 
 

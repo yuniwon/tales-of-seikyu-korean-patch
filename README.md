@@ -8,7 +8,7 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 - 게임: Tales of Seikyu
 - 플랫폼: Steam Windows
-- 패치 버전: `0.1.3-playtest.20260623`
+- 패치 버전: `0.1.4-playtest.20260623`
 - 지원 Steam buildid: `23869434`
 - 지원 Excel 원본 해시: `c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9`
 - 지원 방식: 로컬 원본 파일에 패치 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드, 진단 리포트 저장
@@ -26,7 +26,7 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 ## 폰트 적용 방식
 
-현재 배포본은 별도 폰트 파일을 재배포하지 않습니다. 게임에 이미 포함된 CJK 폰트를 가방 UI의 TextMeshPro fallback으로 연결하고, `폰트 상태` 카드와 검증 결과의 `font_ok` 값으로 적용 여부를 확인합니다.
+현재 배포본은 별도 폰트 파일을 재배포하지 않습니다. 게임에 이미 포함된 CJK 폰트를 가방 UI의 TextMeshPro fallback으로 연결하고, 설정 UI가 사용하는 일본어 폰트 alias를 한글 지원 CJK alias로 교체합니다. `폰트 상태` 카드와 검증 결과의 `font_ok`, `ui_font_alias_ok` 값으로 적용 여부를 확인합니다.
 
 폰트 상태가 `Fallback 미적용`으로 보이면 `한국어 패치 설치/업데이트`를 다시 실행해 주세요.
 
@@ -60,6 +60,17 @@ Steam 경로 확인:
 - 게임 업데이트로 번들 해시가 바뀌면 패처가 설치를 거부할 수 있습니다. 이 경우 새 패치 버전이 필요합니다.
 - 일부 문장/화면은 플레이테스트를 통해 계속 다듬는 중입니다.
 
+## v0.1.4 Hotfix
+
+v0.1.3 설치 후 설정 화면의 한국어가 네모로 깨지던 문제를 수정했습니다.
+
+- 설정 UI TextAsset: `i18n_uiconfig_japanese`
+- 기존 alias: `line_seed_jp`
+- 교체 alias: `zh_cn_serif`
+- 교체 수량: 94개
+- 새 패치 결과 SHA256: `5defc6d90de95fbfa8e691f3f9136f4bd5c9d6d9571613ba7f2e869c29d21453`
+- v0.1.3의 텍스트 전용 패치 결과 SHA256 `6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f`도 수리 대상으로 인식합니다.
+
 ## v0.1.3 Hotfix
 
 Steam buildid `23869434`에서 Excel Addressables 번들 파일명과 SHA256이 바뀌어 이전 패처가 설치를 거부하던 문제를 수정했습니다.
@@ -76,6 +87,8 @@ $env:PYTHONUTF8='1'
 python tools\generate_payload.py
 python tools\test_patcher_features.py
 python tools\test_update_logic.py
+python tools\test_excel_ui_font_patch.py
+python tools\test_repair_text_only_excel.py
 python tools\run_temp_baseline_test.py
 python tools\build_release.py
 python tools\run_exe_temp_test.py

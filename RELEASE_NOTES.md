@@ -6,14 +6,14 @@ Tales of Seikyu 비공식 한글패치 배포 안내입니다.
 
 ## 1) 최신 버전
 
-- 패치 버전: `0.1.3-playtest.20260623`
+- 패치 버전: `0.1.4-playtest.20260623`
 - 지원 플랫폼: Steam Windows
 - 대상 게임 버전/buildid: Steam buildid `23869434`
 - 최근 갱신일: 2026-06-23
 
 ## 2) 다운로드
 
-GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.3-playtest.20260623.zip`을 다운로드해 주세요.
+GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.4-playtest.20260623.zip`을 다운로드해 주세요.
 
 다른 곳으로 공유할 때는 파일 재업로드 대신 이 저장소/릴리스 링크를 공유해 주세요.
 
@@ -40,19 +40,19 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.3-playtest.20260623.zip`을
 
 ## 5) 이번 패처 수정 사항
 
-- 동일 버전 재업로드: 지원하지 않는 게임 업데이트 해시를 감지하면 `게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다` 안내 창을 표시합니다.
-- Steam buildid `23869434`에서 Excel Addressables 번들 파일명과 SHA256이 바뀌어 이전 패처가 설치를 거부하던 문제를 수정했습니다.
-- 새 원본 번들 `configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle`을 지원합니다.
-- 새 원본 SHA256은 `c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9`입니다.
-- 새 패치 결과 SHA256은 `6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f`입니다.
+- v0.1.3 설치 후 설정 화면의 한국어가 네모로 깨지던 문제를 수정했습니다.
+- 설정 UI TextAsset `i18n_uiconfig_japanese`의 `line_seed_jp` alias 94개를 `zh_cn_serif`로 교체합니다.
+- 가방 UI TMP fallback뿐 아니라 설정 UI font alias까지 검증해야 `font_ok=true`가 되도록 보강했습니다.
+- v0.1.3의 텍스트 전용 패치 결과 SHA256 `6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f`도 수리 대상으로 인식합니다.
+- 새 패치 결과 SHA256은 `5defc6d90de95fbfa8e691f3f9136f4bd5c9d6d9571613ba7f2e869c29d21453`입니다.
 - 기존 번역 22,486행은 모두 유지했습니다.
-- 이 중 6행은 row_key 기준으로 새 row_id에 재매핑했고, 1행은 원문 공백 변화로 새 key에 재매핑했습니다.
+- 지원하지 않는 게임 업데이트 해시를 감지하면 `게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다` 안내 창을 표시합니다.
 
 ## 6) 기존 패처 개선 사항
 
 - 스타샌드 아일랜드 로컬 한글패치 배포본의 UX를 참고해, 상태 확인과 진단 기능을 보강했습니다.
 - 첫 화면에 게임 경로, 패치 적용 상태, GitHub 최신 릴리스 상태를 표시합니다.
-- 폰트 fallback 상태를 별도 카드와 검증 JSON의 `font_ok` 값으로 표시합니다.
+- 폰트 fallback 및 설정 UI alias 상태를 별도 카드와 검증 JSON의 `font_ok`, `ui_font_alias_ok` 값으로 표시합니다.
 - Steam `libraryfolders.vdf` / `appmanifest_2340520.acf` 기반 설치 경로 자동 탐색을 보강했습니다.
 - 패처에서 Steam을 통한 게임 실행 요청을 할 수 있습니다.
 - 문제 제보용 진단 리포트 저장 기능을 추가했습니다.
@@ -69,6 +69,7 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.3-playtest.20260623.zip`을
 - 원본 파일 백업 생성
 - 한국어 텍스트 적용
 - 가방 UI 카테고리용 한글 폰트 fallback 적용 및 검증
+- 설정 UI 한글 폰트 alias 적용 및 검증
 - 패치 적용 후 검증
 
 패치 파일에는 완성된 게임 원본 번들 전체가 들어 있지 않습니다. 사용자 PC에 설치된 원본 게임 파일에 한글 텍스트를 적용하는 방식입니다.

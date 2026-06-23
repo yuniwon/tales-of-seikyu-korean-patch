@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.3-playtest.20260623"
+PATCH_VERSION = "0.1.4-playtest.20260623"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -555,6 +555,65 @@ def copy_with_parent(source: Path, target: Path) -> None:
     shutil.copy2(source, target)
 
 
+def excel_ui_font_patch(payload: dict[str, Any]) -> dict[str, Any]:
+    patch = payload.get("excel_bundle", {}).get("ui_font_patch") or {}
+    return patch if isinstance(patch, dict) else {}
+
+
+def font_alias_token(alias: str) -> bytes:
+    return write_string(alias)
+
+
+def apply_excel_ui_font_alias_patch(raw: bytes, payload: dict[str, Any]) -> tuple[bytes, int]:
+    patch = excel_ui_font_patch(payload)
+    if not patch:
+        return raw, 0
+    old_alias = str(patch["old_alias"])
+    new_alias = str(patch["new_alias"])
+    old_token = font_alias_token(old_alias)
+    new_token = font_alias_token(new_alias)
+    replacements = raw.count(old_token)
+    if not replacements:
+        return raw, 0
+    return raw.replace(old_token, new_token), replacements
+
+
+def inspect_excel_ui_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
+    patch = excel_ui_font_patch(payload)
+    if not patch:
+        return {"ui_font_patch_configured": False, "ui_font_alias_ok": True}
+    textasset = str(patch["textasset"])
+    old_alias = str(patch["old_alias"])
+    new_alias = str(patch["new_alias"])
+    expected = int(patch.get("expected_replacements") or 1)
+    raw_by_name = textassets_from_bundle(path)
+    raw = raw_by_name.get(textasset)
+    if raw is None:
+        return {
+            "ui_font_patch_configured": True,
+            "ui_font_textasset": textasset,
+            "ui_font_alias_ok": False,
+            "ui_font_alias_error": "textasset_missing",
+            "old_ui_font_alias": old_alias,
+            "old_ui_font_alias_count": 0,
+            "korean_ui_font_alias": new_alias,
+            "korean_ui_font_alias_count": 0,
+            "expected_ui_font_alias_count": expected,
+        }
+    old_count = raw.count(font_alias_token(old_alias))
+    new_count = raw.count(font_alias_token(new_alias))
+    return {
+        "ui_font_patch_configured": True,
+        "ui_font_textasset": textasset,
+        "ui_font_alias_ok": old_count == 0 and new_count >= expected,
+        "old_ui_font_alias": old_alias,
+        "old_ui_font_alias_count": old_count,
+        "korean_ui_font_alias": new_alias,
+        "korean_ui_font_alias_count": new_count,
+        "expected_ui_font_alias_count": expected,
+    }
+
+
 def planned_excel_textassets(bundle: Path, payload: dict[str, Any]) -> tuple[dict[str, bytes], int]:
     raw_by_name = textassets_from_bundle(bundle)
     by_textasset: dict[str, list[dict[str, Any]]] = {}
@@ -579,6 +638,17 @@ def planned_excel_textassets(bundle: Path, payload: dict[str, Any]) -> tuple[dic
                 row["source_ja"] = entry["source_ja"]
                 changed += 1
         planned[textasset] = serialize_string_table(table)
+
+    font_patch = excel_ui_font_patch(payload)
+    if font_patch:
+        textasset = str(font_patch["textasset"])
+        if textasset not in raw_by_name:
+            raise PatchError(f"UI font TextAsset missing in bundle: {textasset}")
+        base_raw = planned.get(textasset, raw_by_name[textasset])
+        patched_raw, replacements = apply_excel_ui_font_alias_patch(base_raw, payload)
+        if replacements:
+            planned[textasset] = patched_raw
+            changed += replacements
     return planned, changed
 
 
@@ -586,10 +656,11 @@ def apply_excel_patch(game_data: Path, bundle: Path, payload: dict[str, Any], lo
     digest = sha256_file(bundle)
     excel = payload["excel_bundle"]
     accepted = set(excel.get("accepted_patched_sha256", [])) | {excel.get("target_sha256", "")}
-    if digest in accepted:
+    ui_font_status = inspect_excel_ui_font(bundle, payload)
+    if digest in accepted and ui_font_status["ui_font_alias_ok"]:
         log("Excel 번들은 이미 패치되어 있습니다.")
         return digest
-    if digest != excel["source_sha256"]:
+    if digest != excel["source_sha256"] and digest not in accepted:
         raise PatchError(f"지원하지 않는 Excel 번들 해시입니다: {digest}")
     backup_file(game_data, bundle, digest, log)
     planned, changed = planned_excel_textassets(bundle, payload)
@@ -674,6 +745,31 @@ def font_status_from_inspection(inspection: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def font_status_from_excel_ui(inspection: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "ui_font_alias_ok": bool(inspection.get("ui_font_alias_ok")),
+        "ui_font_textasset": inspection.get("ui_font_textasset", ""),
+        "old_ui_font_alias": inspection.get("old_ui_font_alias", ""),
+        "old_ui_font_alias_count": int(inspection.get("old_ui_font_alias_count", 0)),
+        "korean_ui_font_alias": inspection.get("korean_ui_font_alias", ""),
+        "korean_ui_font_alias_count": int(inspection.get("korean_ui_font_alias_count", 0)),
+        "expected_ui_font_alias_count": int(inspection.get("expected_ui_font_alias_count", 0)),
+    }
+
+
+def combined_font_status(bag_inspection: dict[str, Any], excel_ui_inspection: dict[str, Any]) -> dict[str, Any]:
+    bag_status = font_status_from_inspection(bag_inspection)
+    excel_status = font_status_from_excel_ui(excel_ui_inspection)
+    bag_font_ok = bool(bag_status["font_ok"])
+    ui_font_alias_ok = bool(excel_status["ui_font_alias_ok"])
+    return {
+        **bag_status,
+        **excel_status,
+        "bag_font_ok": bag_font_ok,
+        "font_ok": bag_font_ok and ui_font_alias_ok,
+    }
+
+
 def apply_bag_font_patch(game_data: Path, bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
     digest = sha256_file(bundle)
     bag = payload["bag_function_bundle"]
@@ -724,10 +820,10 @@ def build_patched_excel_copy(bundle: Path, output_bundle: Path, payload: dict[st
     digest = sha256_file(bundle)
     excel = payload["excel_bundle"]
     accepted = set(excel.get("accepted_patched_sha256", [])) | {excel.get("target_sha256", "")}
-    if digest in accepted:
+    if digest in accepted and inspect_excel_ui_font(bundle, payload)["ui_font_alias_ok"]:
         copy_with_parent(bundle, output_bundle)
         return sha256_file(output_bundle)
-    if digest != excel["source_sha256"]:
+    if digest != excel["source_sha256"] and digest not in accepted:
         raise PatchError(f"지원하지 않는 Excel 번들 해시입니다: {digest}")
     planned, changed = planned_excel_textassets(bundle, payload)
     log(f"오프라인 Excel TextAsset 변경 행: {changed}")
@@ -832,7 +928,7 @@ def install_patch(game_data_path: Path, payload_path: Path | None = None, log: C
     bag_bundle = find_single_bundle(game_data, payload["bag_function_bundle"]["glob"], bag_hashes)
     excel_after = apply_excel_patch(game_data, excel_bundle, payload, log)
     bag_after = apply_bag_font_patch(game_data, bag_bundle, payload, log)
-    font_status = font_status_from_inspection(inspect_bag_font(bag_bundle, payload))
+    font_status = combined_font_status(inspect_bag_font(bag_bundle, payload), inspect_excel_ui_font(excel_bundle, payload))
     write_state(game_data, payload, excel_bundle, bag_bundle, excel_after, bag_after)
     return {"status": "installed", "excel_sha256": excel_after, "bag_sha256": bag_after, "game_data": str(game_data), **font_status}
 
@@ -860,11 +956,12 @@ def verify_patch(game_data_path: Path, payload_path: Path | None = None, log: Ca
     bag_bundle = find_single_bundle(game_data, payload["bag_function_bundle"]["glob"], bag_hashes)
     excel_hash = sha256_file(excel_bundle)
     bag_hash = sha256_file(bag_bundle)
-    excel_ok = excel_hash in ({payload["excel_bundle"]["target_sha256"]} | set(payload["excel_bundle"].get("accepted_patched_sha256", [])))
-    font_inspection = inspect_bag_font(bag_bundle, payload)
-    font_status = font_status_from_inspection(font_inspection)
+    font_status = combined_font_status(inspect_bag_font(bag_bundle, payload), inspect_excel_ui_font(excel_bundle, payload))
+    excel_ok = excel_hash in ({payload["excel_bundle"]["target_sha256"]} | set(payload["excel_bundle"].get("accepted_patched_sha256", []))) and bool(
+        font_status["ui_font_alias_ok"]
+    )
     bag_ok = bag_hash in ({payload["bag_function_bundle"]["target_sha256"]} | set(payload["bag_function_bundle"].get("accepted_patched_sha256", []))) and bool(
-        font_status["font_ok"]
+        font_status["bag_font_ok"]
     )
     result = {
         "status": "patched" if excel_ok and bag_ok else "not_patched",

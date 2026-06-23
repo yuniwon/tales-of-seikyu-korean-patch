@@ -26,15 +26,20 @@ from tos_ko_patcher.core import (  # noqa: E402
     schema_for_textasset,
     sha256_file,
     textassets_from_bundle,
+    write_string,
 )
 
 PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".korean_patch/backups/configs_assets_excel_faab60dac21aead7056d09e73c9da19c.bundle.5d50ce6257b1d8ca8231f59abe183da0968fd4297d943f1527a7e523be291595.bak"
-EXCEL_SOURCE = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle"
+CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle"
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.3-playtest.20260623/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle.c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9.bak"
 BAG_SOURCE = SRC_GAME_DATA / ".korean_patch/backups/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle.43f3dbeb5cc829e9fd282b19bb3a6155de4a7769459296db8a48390be27bfc85.visual_lqa_351.bak"
 BAG_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle"
 PREVIOUS_PAYLOAD = REPO / "payload/patch_payload.json"
 STEAM_MANIFEST = SRC_GAME_DATA.parents[2] / "appmanifest_2340520.acf"
 
+UI_CONFIG_JAPANESE = "i18n_uiconfig_japanese"
+OLD_UI_FONT_ALIAS = "line_seed_jp"
+KOREAN_UI_FONT_ALIAS = "zh_cn_serif"
 ZH_SERIF_CAB = "CAB-60817ce547ef0bba62727219c74c499f"
 ZH_SERIF_EXTERNAL = f"archive:/{ZH_SERIF_CAB}/{ZH_SERIF_CAB}"
 ZH_SERIF_FONT_PATH_ID = 3547074879389643962
@@ -184,6 +189,19 @@ def source_diff(previous_source: Path, current_source: Path) -> dict[str, Any]:
     }
 
 
+def ui_font_alias_source_count(source_bundle: Path) -> int:
+    raw = textassets_from_bundle(source_bundle)[UI_CONFIG_JAPANESE]
+    return raw.count(write_string(OLD_UI_FONT_ALIAS))
+
+
+def previous_accepted_hashes(previous_payload: dict[str, Any], bundle_key: str) -> list[str]:
+    bundle = previous_payload[bundle_key]
+    hashes = set(bundle.get("accepted_patched_sha256", []))
+    if bundle.get("target_sha256"):
+        hashes.add(str(bundle["target_sha256"]))
+    return sorted(item for item in hashes if item)
+
+
 def write_payload(payload: dict[str, Any]) -> Path:
     out = REPO / "payload/patch_payload.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -250,14 +268,20 @@ def main() -> int:
             "glob": EXCEL_GLOB,
             "source_sha256": sha256_file(EXCEL_SOURCE),
             "target_sha256": "",
-            "accepted_patched_sha256": sorted(set(previous_payload["excel_bundle"].get("accepted_patched_sha256", []))),
+            "accepted_patched_sha256": previous_accepted_hashes(previous_payload, "excel_bundle"),
+            "ui_font_patch": {
+                "textasset": UI_CONFIG_JAPANESE,
+                "old_alias": OLD_UI_FONT_ALIAS,
+                "new_alias": KOREAN_UI_FONT_ALIAS,
+                "expected_replacements": ui_font_alias_source_count(EXCEL_SOURCE),
+            },
             "patch_rows": rows,
         },
         "bag_function_bundle": {
             "glob": BAG_GLOB,
             "source_sha256": sha256_file(BAG_SOURCE),
             "target_sha256": sha256_file(BAG_CURRENT),
-            "accepted_patched_sha256": [sha256_file(BAG_CURRENT)],
+            "accepted_patched_sha256": sorted(set(previous_accepted_hashes(previous_payload, "bag_function_bundle") + [sha256_file(BAG_CURRENT)])),
             "font_patch": {
                 "local_font_name": "LiberationSans SDF",
                 "local_font_path_id": LIBERATION_FONT_PATH_ID,
@@ -273,7 +297,7 @@ def main() -> int:
         data_root = temp / "Tales Of Seikyu_Data"
         target_dir = data_root / "StreamingAssets/aa/StandaloneWindows64"
         target_dir.mkdir(parents=True)
-        temp_excel = target_dir / EXCEL_SOURCE.name
+        temp_excel = target_dir / CURRENT_EXCEL_BUNDLE_NAME
         shutil.copy2(EXCEL_SOURCE, temp_excel)
         planned, _ = planned_excel_textassets(temp_excel, payload)
         saved = save_textassets_to_bundle(temp_excel, temp / "out", planned)

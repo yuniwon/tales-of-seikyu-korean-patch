@@ -6,6 +6,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.3-playtest.20260623/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle.c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9.bak"
 sys.path.insert(0, str(REPO / "src"))
 
 from tos_ko_patcher.core import (  # noqa: E402
@@ -27,7 +28,7 @@ def main() -> int:
         print(json.dumps({"status": "fail", "reason": "expected one current Excel bundle", "matches": [str(item) for item in matches]}, ensure_ascii=False))
         return 1
     current_bundle = matches[0]
-    raw_by_name = textassets_from_bundle(current_bundle)
+    raw_by_name = textassets_from_bundle(EXCEL_SOURCE)
     bundle_identities: dict[str, set[tuple[str, str]]] = {}
     for name, raw in raw_by_name.items():
         schema = schema_for_textasset(name)
@@ -53,6 +54,8 @@ def main() -> int:
         "steam_buildid": buildid,
         "current_excel_bundle": current_bundle.name,
         "current_excel_sha256": sha256_file(current_bundle),
+        "audited_source_bundle": str(EXCEL_SOURCE),
+        "audited_source_sha256": sha256_file(EXCEL_SOURCE),
         "payload_source_sha256": payload["excel_bundle"]["source_sha256"],
         "payload_target_sha256": payload["excel_bundle"]["target_sha256"],
         "payload_rows": len(payload["excel_bundle"]["patch_rows"]),
@@ -61,7 +64,7 @@ def main() -> int:
         "dropped_previous_payload_rows": payload.get("generated_from", {}).get("dropped_previous_payload_rows"),
     }
     print(json.dumps(result, ensure_ascii=False))
-    return 0 if result["status"] == "pass" and result["current_excel_sha256"] == result["payload_source_sha256"] else 1
+    return 0 if result["status"] == "pass" and result["audited_source_sha256"] == result["payload_source_sha256"] else 1
 
 
 if __name__ == "__main__":
