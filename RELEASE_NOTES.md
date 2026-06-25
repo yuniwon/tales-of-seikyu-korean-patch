@@ -6,14 +6,14 @@ Tales of Seikyu 비공식 한글패치 배포 안내입니다.
 
 ## 1) 최신 버전
 
-- 패치 버전: `0.1.5-playtest.20260624`
+- 패치 버전: `0.1.6-playtest.20260625`
 - 지원 플랫폼: Steam Windows
-- 대상 게임 버전/buildid: Steam buildid `23869434`
-- 최근 갱신일: 2026-06-23
+- 대상 게임 버전/buildid: Steam buildid `23906909`
+- 최근 갱신일: 2026-06-25
 
 ## 2) 다운로드
 
-GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.5-playtest.20260624.zip`을 다운로드해 주세요.
+GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.6-playtest.20260625.zip`을 다운로드해 주세요.
 
 다른 곳으로 공유할 때는 파일 재업로드 대신 이 저장소/릴리스 링크를 공유해 주세요.
 
@@ -40,16 +40,13 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.5-playtest.20260624.zip`을
 
 ## 5) 이번 패처 수정 사항
 
-- 일부 PC에서 설치 중 `지정된 경로를 찾을 수 없습니다` 오류가 뜰 수 있던 백업 경로 문제를 수정했습니다.
-- 백업 파일명을 짧은 형식으로 바꿔 기본 Steam 경로 기준 Excel 백업 경로를 262자에서 159자로 줄였습니다.
-- v0.1.4 이전 긴 백업 파일명도 `원본 복구`에서 계속 인식합니다.
-- 경로 관련 Windows 오류가 뜰 때 더 알아보기 쉬운 안내 문구를 표시합니다.
-- v0.1.3 설치 후 설정 화면의 한국어가 네모로 깨지던 문제를 수정했습니다.
-- 설정 UI TextAsset `i18n_uiconfig_japanese`의 `line_seed_jp` alias 94개를 `zh_cn_serif`로 교체합니다.
-- 가방 UI TMP fallback뿐 아니라 설정 UI font alias까지 검증해야 `font_ok=true`가 되도록 보강했습니다.
-- v0.1.3의 텍스트 전용 패치 결과 SHA256 `6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f`도 수리 대상으로 인식합니다.
-- 새 패치 결과 SHA256은 `5defc6d90de95fbfa8e691f3f9136f4bd5c9d6d9571613ba7f2e869c29d21453`입니다.
+- Steam buildid `23906909` 업데이트를 지원합니다.
+- 새 Excel 원본 번들 `configs_assets_excel_133f2db0592e8e139c965fee90b07c1c.bundle`을 지원합니다.
+- 새 원본 SHA256은 `d973dcdac6fbde1604b9f9de94f4949d009b0eb4ee0a798438b9a9d44d1f0465`입니다.
+- 새 패치 결과 SHA256은 `d6076bf4927f4862743b615692802fdc78be8f3c0bd65acc6351cefa002d86fc`입니다.
 - 기존 번역 22,486행은 모두 유지했습니다.
+- 번역 대상 row 추가/삭제/원문 변경은 0건으로 확인했습니다.
+- raw 변경 TextAsset은 `item_item`, `story_init`, `story_trigger` 3개였고, CJK 문자열 추가/삭제는 확인되지 않았습니다.
 - 지원하지 않는 게임 업데이트 해시를 감지하면 `게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다` 안내 창을 표시합니다.
 
 ## 6) 기존 패처 개선 사항

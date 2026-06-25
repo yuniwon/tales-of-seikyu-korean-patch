@@ -12,8 +12,8 @@ from tos_ko_patcher.core import backup_path_for, legacy_backup_name, short_backu
 
 def main() -> int:
     game_data = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
-    digest = "5defc6d90de95fbfa8e691f3f9136f4bd5c9d6d9571613ba7f2e869c29d21453"
-    excel = game_data / "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle"
+    digest = "d6076bf4927f4862743b615692802fdc78be8f3c0bd65acc6351cefa002d86fc"
+    excel = game_data / "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_133f2db0592e8e139c965fee90b07c1c.bundle"
     bag = game_data / "StreamingAssets/aa/StandaloneWindows64/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle"
     excel_short = backup_path_for(game_data, excel, digest)
     excel_legacy = excel_short.parent / legacy_backup_name(excel, digest)
@@ -26,8 +26,8 @@ def main() -> int:
         "excel_legacy_path": str(excel_legacy),
     }
     ok = (
-        checks["excel_short_name"] == "excel.5defc6d90de95fbf.bak"
-        and checks["bag_short_name"] == "bag.5defc6d90de95fbf.bak"
+        checks["excel_short_name"] == "excel.d6076bf4927f4862.bak"
+        and checks["bag_short_name"] == "bag.d6076bf4927f4862.bak"
         and checks["excel_short_path_length"] < 220
         and checks["excel_legacy_path_length"] > 260
     )

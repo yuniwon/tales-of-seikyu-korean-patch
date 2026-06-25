@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.5-playtest.20260624"
+PATCH_VERSION = "0.1.6-playtest.20260625"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
