@@ -310,9 +310,11 @@ def apply_bag_to_temp(source: Path, payload: dict[str, Any]) -> str:
         shutil.copy2(source, target)
         bag = payload["bag_function_bundle"]
         font_patch = bag["font_patch"]
+        local_font_names = {str(name) for name in font_patch.get("local_font_names") or [font_patch["local_font_name"]]}
         env = UnityPy.load(str(target))
         asset = env.assets[0]
         file_id, _ = ensure_external(asset, font_patch["external_path"])
+        seen_names: set[str] = set()
         for obj in env.objects:
             if obj.type.name != "MonoBehaviour":
                 continue
@@ -320,12 +322,16 @@ def apply_bag_to_temp(source: Path, payload: dict[str, Any]) -> str:
                 tree = obj.read_typetree()
             except Exception:
                 continue
-            if tree.get("m_Name") != font_patch["local_font_name"]:
+            if tree.get("m_Name") not in local_font_names:
                 continue
+            seen_names.add(str(tree.get("m_Name") or ""))
             table = tree.setdefault("m_FallbackFontAssetTable", [])
             if not has_ptr(table, file_id, int(font_patch["fallback_font_path_id"])):
                 table.append({"m_FileID": file_id, "m_PathID": int(font_patch["fallback_font_path_id"])})
                 obj.save_typetree(tree)
+        missing_names = sorted(local_font_names - seen_names)
+        if missing_names:
+            raise RuntimeError(f"bag font targets missing: {missing_names}")
         out_dir = temp / "out"
         out_dir.mkdir()
         env.save(out_path=str(out_dir))
@@ -383,6 +389,7 @@ def main() -> int:
             "accepted_patched_sha256": sorted(set(previous_accepted_hashes(previous_payload, "bag_function_bundle") + [sha256_file(BAG_CURRENT)])),
             "font_patch": {
                 "local_font_name": "LiberationSans SDF",
+                "local_font_names": ["LiberationSans SDF", "LiberationSans SDF - Fallback"],
                 "local_font_path_id": LIBERATION_FONT_PATH_ID,
                 "external_path": ZH_SERIF_EXTERNAL,
                 "fallback_font_path_id": ZH_SERIF_FONT_PATH_ID,

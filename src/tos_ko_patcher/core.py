@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.8-playtest.20260701"
+PATCH_VERSION = "0.1.9-playtest.20260702"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -901,6 +901,7 @@ def has_ptr(items: list[dict[str, int]], file_id: int, path_id: int) -> bool:
 
 def inspect_bag_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
     font_patch = payload["bag_function_bundle"]["font_patch"]
+    local_font_names = [str(name) for name in font_patch.get("local_font_names") or [font_patch["local_font_name"]]]
     env = UnityPy.load(str(path))
     asset = env.assets[0]
     file_id = external_index(asset, font_patch["external_path"])
@@ -912,20 +913,25 @@ def inspect_bag_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
             tree = obj.read_typetree()
         except Exception:
             continue
-        if tree.get("m_Name") == font_patch["local_font_name"]:
+        if tree.get("m_Name") in local_font_names:
             table = tree.get("m_FallbackFontAssetTable") or []
             fallback_hits.append(
                 {
                     "path_id": obj.path_id,
+                    "name": str(tree.get("m_Name") or ""),
                     "has_fallback": file_id is not None and has_ptr(table, file_id, int(font_patch["fallback_font_path_id"])),
                     "fallback_count": len(table),
                 }
             )
+    target_names = {item["name"] for item in fallback_hits}
+    missing_names = [name for name in local_font_names if name not in target_names]
     return {
         "external_file_id": file_id,
         "fallback_hits": fallback_hits,
-        "font_fallback_ok": file_id is not None and any(item["has_fallback"] for item in fallback_hits),
-        "local_font_name": font_patch["local_font_name"],
+        "font_fallback_ok": file_id is not None and bool(fallback_hits) and not missing_names and all(item["has_fallback"] for item in fallback_hits),
+        "local_font_name": ", ".join(local_font_names),
+        "local_font_names": local_font_names,
+        "missing_local_font_names": missing_names,
         "external_path": font_patch["external_path"],
         "fallback_font_path_id": int(font_patch["fallback_font_path_id"]),
     }
@@ -972,10 +978,12 @@ def combined_font_status(bag_inspection: dict[str, Any], excel_ui_inspection: di
 def patch_bag_font_bundle(bundle: Path, payload: dict[str, Any], log: Callable[[str], None], prefix: str) -> tuple[str, int, bool]:
     bag = payload["bag_function_bundle"]
     font_patch = bag["font_patch"]
+    local_font_names = {str(name) for name in font_patch.get("local_font_names") or [font_patch["local_font_name"]]}
     env = UnityPy.load(str(bundle))
     asset = env.assets[0]
     file_id, external_added = ensure_external(asset, font_patch["external_path"])
     fallback_changed = 0
+    seen_names: set[str] = set()
     for obj in env.objects:
         if obj.type.name != "MonoBehaviour":
             continue
@@ -983,14 +991,18 @@ def patch_bag_font_bundle(bundle: Path, payload: dict[str, Any], log: Callable[[
             tree = obj.read_typetree()
         except Exception:
             continue
-        if tree.get("m_Name") != font_patch["local_font_name"]:
+        if tree.get("m_Name") not in local_font_names:
             continue
+        seen_names.add(str(tree.get("m_Name") or ""))
         table = tree.setdefault("m_FallbackFontAssetTable", [])
         if has_ptr(table, file_id, int(font_patch["fallback_font_path_id"])):
             continue
         table.append({"m_FileID": file_id, "m_PathID": int(font_patch["fallback_font_path_id"])})
         obj.save_typetree(tree)
         fallback_changed += 1
+    missing_names = sorted(local_font_names - seen_names)
+    if missing_names:
+        raise PatchError(f"가방 UI 폰트 대상을 찾지 못했습니다: {', '.join(missing_names)}")
     log(f"가방 UI 폰트 fallback 변경: {fallback_changed}, external_added={external_added}")
     if fallback_changed <= 0 and not inspect_bag_font(bundle, payload)["font_fallback_ok"]:
         raise PatchError("가방 UI 폰트 구조가 바뀌어서 새 패치가 필요합니다.")
@@ -1091,33 +1103,10 @@ def build_patched_bag_copy(bundle: Path, output_bundle: Path, payload: dict[str,
             raise PatchError("오프라인 가방 UI 폰트를 적용하지 못했습니다. 새 패치가 필요합니다.")
         return new_digest
 
-    font_patch = bag["font_patch"]
-    env = UnityPy.load(str(bundle))
-    asset = env.assets[0]
-    file_id, external_added = ensure_external(asset, font_patch["external_path"])
-    fallback_changed = 0
-    for obj in env.objects:
-        if obj.type.name != "MonoBehaviour":
-            continue
-        try:
-            tree = obj.read_typetree()
-        except Exception:
-            continue
-        if tree.get("m_Name") != font_patch["local_font_name"]:
-            continue
-        table = tree.setdefault("m_FallbackFontAssetTable", [])
-        if has_ptr(table, file_id, int(font_patch["fallback_font_path_id"])):
-            continue
-        table.append({"m_FileID": file_id, "m_PathID": int(font_patch["fallback_font_path_id"])})
-        obj.save_typetree(tree)
-        fallback_changed += 1
-    log(f"오프라인 가방 UI 폰트 fallback 변경: {fallback_changed}, external_added={external_added}")
-    with tempfile.TemporaryDirectory(prefix="tos-ko-export-bag-") as temp:
-        env.save(out_path=temp)
-        saved = Path(temp) / bundle.name
-        if not saved.exists():
-            raise PatchError("오프라인 가방 UI 번들 저장 결과를 찾지 못했습니다.")
-        copy_with_parent(saved, output_bundle)
+    copy_with_parent(bundle, output_bundle)
+    new_digest, _fallback_changed, _external_added = patch_bag_font_bundle(output_bundle, payload, log, "tos-ko-export-bag-")
+    if not inspect_bag_font(output_bundle, payload)["font_fallback_ok"]:
+        raise PatchError("오프라인 가방 UI 폰트를 적용하지 못했습니다. 새 패치가 필요합니다.")
     new_digest = sha256_file(output_bundle)
     accepted_after = set(bag.get("accepted_patched_sha256", [])) | {bag["target_sha256"]}
     if new_digest not in accepted_after:
