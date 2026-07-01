@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.9-playtest.20260702"
+PATCH_VERSION = "0.1.10-playtest.20260702"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -819,7 +819,7 @@ def apply_excel_patch_report(game_data: Path, bundle: Path, payload: dict[str, A
     excel = payload["excel_bundle"]
     accepted = set(excel.get("accepted_patched_sha256", [])) | {excel.get("target_sha256", "")}
     ui_font_status = inspect_excel_ui_font(bundle, payload)
-    if digest in accepted and ui_font_status["ui_font_alias_ok"]:
+    if digest == excel.get("target_sha256") and ui_font_status["ui_font_alias_ok"]:
         log("Excel 번들은 이미 패치되어 있습니다.")
         return {"sha256": digest, "source_sha256_before": digest, "mode": "strict", "partial_patch": False, "changed_units": 0}
     if digest != excel["source_sha256"] and digest not in accepted:

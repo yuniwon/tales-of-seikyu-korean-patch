@@ -102,7 +102,7 @@ def main() -> int:
         after = inspect_excel_ui_font(target_dir / EXCEL_BUNDLE_NAME, payload)
 
     ok = (
-        text_only_hash in set(payload["excel_bundle"].get("accepted_patched_sha256", []))
+        verify_result.get("excel_ok")
         and not before["ui_font_alias_ok"]
         and after["ui_font_alias_ok"]
         and verify_result.get("font_ok")

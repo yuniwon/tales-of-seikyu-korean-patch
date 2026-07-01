@@ -44,6 +44,15 @@ SOURCE_UPDATE_WORKSETS = [
     / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_story_book_main_content_352_working_set.tsv"
 ]
 
+SURFACE_TEXT_OVERRIDES = {
+    # This compact vertical button uses the same font asset as working item text,
+    # but Korean dynamic glyphs still render as fallback squares on this surface.
+    # Keep the workaround scoped to the three visible inventory sort tabs.
+    ("inventory__sort_type_desc", "5", "inventory__sort_type/desc_22b777e6fcb613b8ba83ced9594cd07e"): "Normal",
+    ("inventory__sort_type_desc", "6", "inventory__sort_type/desc_0e46d8d6b7a0096b06c0603c9fca9aad"): "Quest",
+    ("inventory__sort_type_desc", "7", "inventory__sort_type/desc_7402599bc6350c095fb3ca545d950480"): "Gold",
+}
+
 UI_CONFIG_JAPANESE = "i18n_uiconfig_japanese"
 OLD_UI_FONT_ALIAS = "line_seed_jp"
 KOREAN_UI_FONT_ALIAS = "zh_cn_serif"
@@ -259,6 +268,25 @@ def merge_patch_rows(base_rows: list[dict[str, Any]], overlay_rows: list[dict[st
     return merged, added, replaced
 
 
+def apply_surface_text_overrides(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    expected = set(SURFACE_TEXT_OVERRIDES)
+    seen: set[tuple[str, str, str]] = set()
+    updated_rows: list[dict[str, Any]] = []
+    for row in rows:
+        key = (str(row["textasset"]), str(row["row_id"]), str(row["key"]))
+        if key in SURFACE_TEXT_OVERRIDES:
+            updated = dict(row)
+            updated["source_ja"] = SURFACE_TEXT_OVERRIDES[key]
+            updated_rows.append(updated)
+            seen.add(key)
+        else:
+            updated_rows.append(row)
+    missing = sorted(expected - seen)
+    if missing:
+        raise RuntimeError(f"surface text override target rows missing: {missing}")
+    return updated_rows
+
+
 def source_diff(previous_source: Path, current_source: Path) -> dict[str, Any]:
     previous = source_identity_index(previous_source)
     current = source_identity_index(current_source)
@@ -343,6 +371,7 @@ def main() -> int:
     rows, dropped_rows, remapped_rows, source_text_remapped_rows = build_rows(previous_payload, EXCEL_SOURCE, PREVIOUS_EXCEL_SOURCE)
     overlay_rows = source_update_rows(EXCEL_SOURCE)
     rows, source_update_added_rows, source_update_replaced_rows = merge_patch_rows(rows, overlay_rows)
+    rows = apply_surface_text_overrides(rows)
     rows = enrich_rows_with_source_fingerprints(rows, EXCEL_SOURCE)
     diff = source_diff(PREVIOUS_EXCEL_SOURCE, EXCEL_SOURCE)
     payload: dict[str, Any] = {
