@@ -23,6 +23,7 @@ from tos_ko_patcher.core import (  # noqa: E402
     parse_acf_field,
     parse_string_table,
     planned_excel_textassets,
+    row_source_fingerprint,
     save_textassets_to_bundle,
     schema_for_textasset,
     sha256_file,
@@ -133,6 +134,36 @@ def source_row_index(bundle: Path) -> dict[str, dict[str, dict[str, str]]]:
             for row in table.rows
         }
     return result
+
+
+def source_row_lookup(bundle: Path) -> dict[tuple[str, str, str], dict[str, object]]:
+    assets = textassets_from_bundle(bundle)
+    result: dict[tuple[str, str, str], dict[str, object]] = {}
+    for name, raw in assets.items():
+        schema = schema_for_textasset(name)
+        try:
+            table = parse_string_table(name, raw, schema)
+        except Exception:
+            continue
+        key_name = key_column_for_schema(schema)
+        for row in table.rows:
+            result[(name, str(row["row_id"]), str(row.get(key_name, "")))] = row
+    return result
+
+
+def enrich_rows_with_source_fingerprints(rows: list[dict[str, Any]], source_bundle: Path) -> list[dict[str, Any]]:
+    lookup = source_row_lookup(source_bundle)
+    enriched: list[dict[str, Any]] = []
+    for entry in rows:
+        key = (str(entry["textasset"]), str(entry["row_id"]), str(entry["key"]))
+        source_row = lookup.get(key)
+        if source_row is None:
+            raise RuntimeError(f"cannot fingerprint missing source row: {key}")
+        schema = str(entry["schema"])
+        updated = dict(entry)
+        updated["source_fingerprint"] = row_source_fingerprint(source_row, schema)
+        enriched.append(updated)
+    return enriched
 
 
 def build_rows(
@@ -306,6 +337,7 @@ def main() -> int:
     rows, dropped_rows, remapped_rows, source_text_remapped_rows = build_rows(previous_payload, EXCEL_SOURCE, PREVIOUS_EXCEL_SOURCE)
     overlay_rows = source_update_rows(EXCEL_SOURCE)
     rows, source_update_added_rows, source_update_replaced_rows = merge_patch_rows(rows, overlay_rows)
+    rows = enrich_rows_with_source_fingerprints(rows, EXCEL_SOURCE)
     diff = source_diff(PREVIOUS_EXCEL_SOURCE, EXCEL_SOURCE)
     payload: dict[str, Any] = {
         "patch_version": PATCH_VERSION,

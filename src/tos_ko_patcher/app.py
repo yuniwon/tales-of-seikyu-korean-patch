@@ -43,12 +43,14 @@ ACCENT_HOVER = "#719cff"
 DANGER = "#ef6461"
 SUCCESS = "#59c27d"
 WARN = "#f0b45a"
-GAME_UPDATED_NOTICE = "게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다"
+GAME_UPDATED_NOTICE = "게임이 업데이트되었습니다. 댓글로 제보해 주시면 빠르게 패치하겠습니다."
 PATH_ERROR_NOTICE = "선택한 게임 폴더 또는 백업 경로를 찾을 수 없습니다. 게임 폴더 찾기로 Tales Of Seikyu_Data 폴더를 다시 지정해 주세요."
 GAME_UPDATE_ERROR_MARKERS = (
     "지원되는 해시의 번들을 찾지 못했습니다",
     "지원하지 않는 Excel 번들 해시입니다",
     "지원하지 않는 가방 UI 번들 해시입니다",
+    "게임이 많이 바뀌어서 새 패치가 필요합니다",
+    "새 패치가 필요합니다",
 )
 PATH_ERROR_MARKERS = (
     "지정된 경로를 찾을 수 없습니다",
@@ -194,8 +196,8 @@ class PatcherGui:
         )
         self.log.pack(fill=BOTH, expand=True)
         self._log("게임을 완전히 종료한 뒤 설치/복구를 진행해 주세요.")
-        self._log("최신 패처 확인은 GitHub Releases를 조회하고, 다운로드는 ZIP 파일 저장까지만 진행합니다.")
-        self._log("폰트는 게임 내 CJK 폰트 fallback과 설정 UI font alias를 별도로 검증합니다.")
+        self._log("최신 패처가 있으면 다운로드 폴더에 ZIP을 저장합니다.")
+        self._log("글자가 네모로 보이면 한국어 패치 설치/업데이트를 다시 눌러 주세요.")
 
     def _status_card(self, parent: ttk.Frame, title: str, variable: StringVar) -> ttk.Frame:
         frame = ttk.Frame(parent, style="Panel.TFrame", padding=14)
@@ -380,11 +382,14 @@ class PatcherGui:
                 messagebox.showinfo("상태 확인", self.patch_status_var.get())
         elif action == "install":
             self.path_status_var.set("경로 확인됨")
-            self.patch_status_var.set("한국어 패치 적용됨")
+            if result.get("partial_patch"):
+                self.patch_status_var.set("대부분 적용됨")
+            else:
+                self.patch_status_var.set("한국어 패치 적용됨")
             self._apply_font_status(result)
-            self.progress_var.set("설치 완료. 게임을 다시 실행해 주세요.")
+            self.progress_var.set(str(result.get("user_message") or "설치 완료. 게임을 다시 실행해 주세요."))
             if notify:
-                messagebox.showinfo("설치 완료", "한국어 패치가 적용되었습니다. 게임을 다시 실행해 주세요.")
+                messagebox.showinfo("설치 완료", str(result.get("user_message") or "한국어 패치가 적용되었습니다. 게임을 다시 실행해 주세요."))
         elif action == "restore":
             self.path_status_var.set("경로 확인됨")
             self.patch_status_var.set("원본 복구됨")
@@ -449,24 +454,27 @@ class PatcherGui:
         if status == "patched":
             self.patch_status_var.set("한국어 패치 적용됨")
             self.progress_var.set("현재 게임 파일은 패치된 상태입니다.")
+        elif status == "patched_partial":
+            skipped = int(result.get("skipped_rows") or 0)
+            self.patch_status_var.set("대부분 적용됨")
+            if skipped:
+                self.progress_var.set(f"패치된 상태입니다. 새로 바뀐 문장 {skipped}개는 원문으로 보일 수 있어요.")
+            else:
+                self.progress_var.set("패치된 상태입니다.")
         else:
             excel_ok = result.get("excel_ok")
             font_ok = result.get("font_ok")
-            detail = f"텍스트 {'OK' if excel_ok else '미적용'}, 폰트 {'OK' if font_ok else '미적용'}"
-            self.patch_status_var.set(f"미적용 또는 일부 적용 ({detail})")
+            detail = f"글 {'적용됨' if excel_ok else '미적용'}, 글자 표시 {'정상' if font_ok else '확인 필요'}"
+            self.patch_status_var.set(f"확인 필요 ({detail})")
             self.progress_var.set("설치/업데이트를 실행하면 현재 지원 파일에 패치를 적용합니다.")
 
     def _apply_font_status(self, result: dict[str, Any]) -> None:
         if result.get("font_ok"):
-            hits = result.get("font_fallback_hit_count", 0)
-            candidates = result.get("font_fallback_candidate_count", 0)
-            aliases = result.get("korean_ui_font_alias_count", 0)
-            self.font_status_var.set(f"Fallback+UI OK ({hits}/{candidates}, alias {aliases})")
+            self.font_status_var.set("글자 표시 정상")
         elif result.get("bag_font_ok"):
-            old_aliases = result.get("old_ui_font_alias_count", 0)
-            self.font_status_var.set(f"UI alias 미적용 ({old_aliases})")
+            self.font_status_var.set("설정 글자 확인 필요")
         else:
-            self.font_status_var.set("Fallback 미적용")
+            self.font_status_var.set("글자 깨짐 가능")
 
     def _apply_update_status(self, result: dict[str, Any]) -> None:
         latest = str(result.get("latest_tag") or "")

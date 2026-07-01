@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.7-playtest.20260701"
+PATCH_VERSION = "0.1.8-playtest.20260701"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -432,6 +432,25 @@ def key_column_for_schema(schema: str) -> str:
     return "text_id" if "text_id" in SCHEMA_COLUMNS[schema] else "row_key"
 
 
+def source_fingerprint_columns(schema: str) -> list[str]:
+    key_column = key_column_for_schema(schema)
+    return [column for column in SCHEMA_COLUMNS[schema] if column != key_column]
+
+
+def normalize_fingerprint_value(value: object) -> str:
+    return str(value).replace("\r\n", "\n").replace("\r", "\n")
+
+
+def row_source_fingerprint(row: dict[str, object], schema: str) -> str:
+    source_values = {column: normalize_fingerprint_value(row.get(column, "")) for column in source_fingerprint_columns(schema)}
+    payload = json.dumps(source_values, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def row_source_snapshot(row: dict[str, object], schema: str) -> dict[str, str]:
+    return {column: normalize_fingerprint_value(row.get(column, "")) for column in source_fingerprint_columns(schema)}
+
+
 def parse_string_table(name: str, raw: bytes, schema: str) -> ParsedTable:
     columns = SCHEMA_COLUMNS[schema]
     pos = 0
@@ -654,7 +673,27 @@ def inspect_excel_ui_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]
     }
 
 
-def planned_excel_textassets(bundle: Path, payload: dict[str, Any], allow_missing_rows: bool = False) -> tuple[dict[str, bytes], int]:
+def make_skip_detail(textasset: str, entry: dict[str, Any], reason: str, row: dict[str, object] | None, schema: str) -> dict[str, Any]:
+    detail: dict[str, Any] = {
+        "reason": reason,
+        "textasset": textasset,
+        "schema": str(entry.get("schema", schema)),
+        "row_id": str(entry.get("row_id", "")),
+        "key": str(entry.get("key", "")),
+        "korean": str(entry.get("source_ja", "")),
+    }
+    if row is not None:
+        detail["current_source"] = row_source_snapshot(row, schema)
+        detail["current_fingerprint"] = row_source_fingerprint(row, schema)
+    return detail
+
+
+def planned_excel_textassets_report(
+    bundle: Path,
+    payload: dict[str, Any],
+    allow_missing_rows: bool = False,
+    compatible_only: bool = False,
+) -> tuple[dict[str, bytes], int, dict[str, Any]]:
     raw_by_name = textassets_from_bundle(bundle)
     by_textasset: dict[str, list[dict[str, Any]]] = {}
     for entry in payload["excel_bundle"]["patch_rows"]:
@@ -662,24 +701,81 @@ def planned_excel_textassets(bundle: Path, payload: dict[str, Any], allow_missin
 
     planned: dict[str, bytes] = {}
     changed = 0
+    report: dict[str, Any] = {
+        "mode": "compatible" if compatible_only else "strict",
+        "total_rows": 0,
+        "compatible_rows": 0,
+        "changed_rows": 0,
+        "already_patched_rows": 0,
+        "skipped_rows": 0,
+        "skipped_by_reason": {},
+        "skipped": [],
+        "changed_units": 0,
+        "ui_font_alias_replacements": 0,
+    }
+
+    def skip(detail: dict[str, Any]) -> None:
+        report["skipped_rows"] += 1
+        reason = str(detail["reason"])
+        skipped_by_reason = report["skipped_by_reason"]
+        skipped_by_reason[reason] = int(skipped_by_reason.get(reason, 0)) + 1
+        report["skipped"].append(detail)
+
     for textasset, entries in sorted(by_textasset.items()):
         if textasset not in raw_by_name:
+            if compatible_only:
+                for entry in entries:
+                    report["total_rows"] += 1
+                    skip(make_skip_detail(textasset, entry, "missing_textasset", None, str(entry.get("schema", "keyed_default"))))
+                continue
             raise PatchError(f"TextAsset missing in bundle: {textasset}")
         schema = entries[0]["schema"]
-        table = parse_string_table(textasset, raw_by_name[textasset], schema)
+        try:
+            table = parse_string_table(textasset, raw_by_name[textasset], schema)
+        except Exception as exc:
+            if compatible_only:
+                for entry in entries:
+                    report["total_rows"] += 1
+                    detail = make_skip_detail(textasset, entry, "parse_failed", None, schema)
+                    detail["error"] = str(exc)
+                    skip(detail)
+                continue
+            raise
         key_column = key_column_for_schema(schema)
         lookup = {(str(row["row_id"]), str(row.get(key_column, ""))): row for row in table.rows}
+        touched = False
         for entry in entries:
+            report["total_rows"] += 1
             key = (str(entry["row_id"]), str(entry["key"]))
             row = lookup.get(key)
             if row is None:
-                if allow_missing_rows:
+                if allow_missing_rows or compatible_only:
+                    skip(make_skip_detail(textasset, entry, "missing_row", None, schema))
                     continue
                 raise PatchError(f"패치 대상 행을 찾지 못했습니다: {textasset} {key}")
+            if compatible_only:
+                if str(row.get("source_ja", "")) == entry["source_ja"]:
+                    report["compatible_rows"] += 1
+                    report["already_patched_rows"] += 1
+                    continue
+                expected_fingerprint = str(entry.get("source_fingerprint") or "")
+                if not expected_fingerprint:
+                    skip(make_skip_detail(textasset, entry, "missing_source_fingerprint", row, schema))
+                    continue
+                current_fingerprint = row_source_fingerprint(row, schema)
+                if current_fingerprint != expected_fingerprint:
+                    detail = make_skip_detail(textasset, entry, "source_changed", row, schema)
+                    detail["expected_fingerprint"] = expected_fingerprint
+                    skip(detail)
+                    continue
+                report["compatible_rows"] += 1
             if str(row.get("source_ja", "")) != entry["source_ja"]:
                 row["source_ja"] = entry["source_ja"]
                 changed += 1
-        planned[textasset] = serialize_string_table(table)
+                report["changed_rows"] += 1
+                touched = True
+        if touched or not compatible_only:
+            planned[textasset] = serialize_string_table(table)
 
     font_patch = excel_ui_font_patch(payload)
     if font_patch:
@@ -691,19 +787,76 @@ def planned_excel_textassets(bundle: Path, payload: dict[str, Any], allow_missin
         if replacements:
             planned[textasset] = patched_raw
             changed += replacements
+            report["ui_font_alias_replacements"] = replacements
+    report["changed_units"] = changed
+    return planned, changed, report
+
+
+def planned_excel_textassets(bundle: Path, payload: dict[str, Any], allow_missing_rows: bool = False) -> tuple[dict[str, bytes], int]:
+    planned, changed, _report = planned_excel_textassets_report(bundle, payload, allow_missing_rows=allow_missing_rows)
     return planned, changed
 
 
-def apply_excel_patch(game_data: Path, bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
+def write_compatibility_report(game_data: Path, report: dict[str, Any]) -> str:
+    reports = state_dir(game_data) / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    path = reports / f"compatible_patch_{time.strftime('%Y%m%d_%H%M%S')}.json"
+    path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return str(path)
+
+
+def simple_install_message(result: dict[str, Any]) -> str:
+    if result.get("partial_patch"):
+        skipped = int(result.get("skipped_rows") or 0)
+        if skipped:
+            return f"패치가 끝났습니다. 새로 바뀐 문장 {skipped}개는 아직 원문으로 보일 수 있어요."
+        return "패치가 끝났습니다. 게임을 다시 실행해 주세요."
+    return "한국어 패치가 적용되었습니다. 게임을 다시 실행해 주세요."
+
+
+def apply_excel_patch_report(game_data: Path, bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> dict[str, Any]:
     digest = sha256_file(bundle)
     excel = payload["excel_bundle"]
     accepted = set(excel.get("accepted_patched_sha256", [])) | {excel.get("target_sha256", "")}
     ui_font_status = inspect_excel_ui_font(bundle, payload)
     if digest in accepted and ui_font_status["ui_font_alias_ok"]:
         log("Excel 번들은 이미 패치되어 있습니다.")
-        return digest
+        return {"sha256": digest, "source_sha256_before": digest, "mode": "strict", "partial_patch": False, "changed_units": 0}
     if digest != excel["source_sha256"] and digest not in accepted:
-        raise PatchError(f"지원하지 않는 Excel 번들 해시입니다: {digest}")
+        planned, changed, report = planned_excel_textassets_report(bundle, payload, compatible_only=True)
+        if int(report["compatible_rows"]) <= 0:
+            raise PatchError("게임이 많이 바뀌어서 새 패치가 필요합니다.")
+        backup_file(game_data, bundle, digest, log)
+        log(f"게임 업데이트 감지: 맞는 문장 {report['compatible_rows']}개를 자동 적용합니다.")
+        log(f"새로 바뀌었거나 확인이 필요한 문장: {report['skipped_rows']}개")
+        with tempfile.TemporaryDirectory(prefix="tos-ko-excel-compatible-") as temp:
+            saved = save_textassets_to_bundle(bundle, Path(temp), planned)
+            copy_with_parent(saved, bundle)
+        new_digest = sha256_file(bundle)
+        font_status = inspect_excel_ui_font(bundle, payload)
+        if not font_status["ui_font_alias_ok"]:
+            raise PatchError("폰트 설정을 적용하지 못했습니다. 새 패치가 필요합니다.")
+        report.update(
+            {
+                "status": "partial_applied" if int(report["skipped_rows"]) else "applied",
+                "source_sha256_before": digest,
+                "patched_sha256": new_digest,
+                "patch_version": payload.get("patch_version", PATCH_VERSION),
+            }
+        )
+        report_path = write_compatibility_report(game_data, report)
+        log(f"업데이트 제보 파일 저장: {report_path}")
+        return {
+            "sha256": new_digest,
+            "source_sha256_before": digest,
+            "mode": "compatible",
+            "partial_patch": int(report["skipped_rows"]) > 0,
+            "compatible_rows": int(report["compatible_rows"]),
+            "skipped_rows": int(report["skipped_rows"]),
+            "changed_units": changed,
+            "compatibility_report": report_path,
+            "skipped_by_reason": report["skipped_by_reason"],
+        }
     backup_file(game_data, bundle, digest, log)
     planned, changed = planned_excel_textassets(bundle, payload, allow_missing_rows=digest in accepted)
     log(f"Excel TextAsset 변경 행: {changed}")
@@ -714,7 +867,11 @@ def apply_excel_patch(game_data: Path, bundle: Path, payload: dict[str, Any], lo
     accepted_after = set(excel.get("accepted_patched_sha256", [])) | {excel["target_sha256"]}
     if new_digest not in accepted_after:
         raise PatchError(f"Excel 패치 후 해시 검증 실패: {new_digest}")
-    return new_digest
+    return {"sha256": new_digest, "source_sha256_before": digest, "mode": "strict", "partial_patch": False, "changed_units": changed}
+
+
+def apply_excel_patch(game_data: Path, bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
+    return str(apply_excel_patch_report(game_data, bundle, payload, log)["sha256"])
 
 
 def external_index(asset: Any, external_path: str) -> int | None:
@@ -812,18 +969,8 @@ def combined_font_status(bag_inspection: dict[str, Any], excel_ui_inspection: di
     }
 
 
-def apply_bag_font_patch(game_data: Path, bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
-    digest = sha256_file(bundle)
+def patch_bag_font_bundle(bundle: Path, payload: dict[str, Any], log: Callable[[str], None], prefix: str) -> tuple[str, int, bool]:
     bag = payload["bag_function_bundle"]
-    accepted = set(bag.get("accepted_patched_sha256", [])) | {bag.get("target_sha256", "")}
-    if digest in accepted:
-        if inspect_bag_font(bundle, payload)["font_fallback_ok"]:
-            log("가방 UI 폰트 번들은 이미 패치되어 있습니다.")
-            return digest
-    if digest != bag["source_sha256"]:
-        raise PatchError(f"지원하지 않는 가방 UI 번들 해시입니다: {digest}")
-    backup_file(game_data, bundle, digest, log)
-
     font_patch = bag["font_patch"]
     env = UnityPy.load(str(bundle))
     asset = env.assets[0]
@@ -845,17 +992,57 @@ def apply_bag_font_patch(game_data: Path, bundle: Path, payload: dict[str, Any],
         obj.save_typetree(tree)
         fallback_changed += 1
     log(f"가방 UI 폰트 fallback 변경: {fallback_changed}, external_added={external_added}")
-    with tempfile.TemporaryDirectory(prefix="tos-ko-bag-") as temp:
+    if fallback_changed <= 0 and not inspect_bag_font(bundle, payload)["font_fallback_ok"]:
+        raise PatchError("가방 UI 폰트 구조가 바뀌어서 새 패치가 필요합니다.")
+    with tempfile.TemporaryDirectory(prefix=prefix) as temp:
         env.save(out_path=temp)
         saved = Path(temp) / bundle.name
         if not saved.exists():
             raise PatchError("가방 UI 번들 저장 결과를 찾지 못했습니다.")
         copy_with_parent(saved, bundle)
+    return sha256_file(bundle), fallback_changed, external_added
+
+
+def apply_bag_font_patch_report(game_data: Path, bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> dict[str, Any]:
+    digest = sha256_file(bundle)
+    bag = payload["bag_function_bundle"]
+    accepted = set(bag.get("accepted_patched_sha256", [])) | {bag.get("target_sha256", "")}
+    if digest in accepted:
+        if inspect_bag_font(bundle, payload)["font_fallback_ok"]:
+            log("가방 UI 폰트 번들은 이미 패치되어 있습니다.")
+            return {"sha256": digest, "source_sha256_before": digest, "mode": "strict", "changed_units": 0}
+    if digest != bag["source_sha256"]:
+        if inspect_bag_font(bundle, payload)["font_fallback_ok"]:
+            log("가방 UI 폰트는 이미 사용할 수 있습니다.")
+            return {"sha256": digest, "source_sha256_before": digest, "mode": "compatible", "changed_units": 0}
+        backup_file(game_data, bundle, digest, log)
+        new_digest, fallback_changed, external_added = patch_bag_font_bundle(bundle, payload, log, "tos-ko-bag-compatible-")
+        if not inspect_bag_font(bundle, payload)["font_fallback_ok"]:
+            raise PatchError("가방 UI 폰트를 적용하지 못했습니다. 새 패치가 필요합니다.")
+        return {
+            "sha256": new_digest,
+            "source_sha256_before": digest,
+            "mode": "compatible",
+            "changed_units": fallback_changed,
+            "external_added": external_added,
+        }
+    backup_file(game_data, bundle, digest, log)
+    new_digest, fallback_changed, external_added = patch_bag_font_bundle(bundle, payload, log, "tos-ko-bag-")
     new_digest = sha256_file(bundle)
     accepted_after = set(bag.get("accepted_patched_sha256", [])) | {bag["target_sha256"]}
     if new_digest not in accepted_after:
         raise PatchError(f"가방 UI 패치 후 해시 검증 실패: {new_digest}")
-    return new_digest
+    return {
+        "sha256": new_digest,
+        "source_sha256_before": digest,
+        "mode": "strict",
+        "changed_units": fallback_changed,
+        "external_added": external_added,
+    }
+
+
+def apply_bag_font_patch(game_data: Path, bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
+    return str(apply_bag_font_patch_report(game_data, bundle, payload, log)["sha256"])
 
 
 def build_patched_excel_copy(bundle: Path, output_bundle: Path, payload: dict[str, Any], log: Callable[[str], None] = log_noop) -> str:
@@ -866,7 +1053,16 @@ def build_patched_excel_copy(bundle: Path, output_bundle: Path, payload: dict[st
         copy_with_parent(bundle, output_bundle)
         return sha256_file(output_bundle)
     if digest != excel["source_sha256"] and digest not in accepted:
-        raise PatchError(f"지원하지 않는 Excel 번들 해시입니다: {digest}")
+        planned, changed, report = planned_excel_textassets_report(bundle, payload, compatible_only=True)
+        if int(report["compatible_rows"]) <= 0:
+            raise PatchError("게임이 많이 바뀌어서 새 패치가 필요합니다.")
+        log(f"오프라인 호환 Excel 변경 행: {changed}, 확인 필요 행: {report['skipped_rows']}")
+        with tempfile.TemporaryDirectory(prefix="tos-ko-export-excel-compatible-") as temp:
+            saved = save_textassets_to_bundle(bundle, Path(temp), planned)
+            copy_with_parent(saved, output_bundle)
+        if not inspect_excel_ui_font(output_bundle, payload)["ui_font_alias_ok"]:
+            raise PatchError("오프라인 Excel 폰트 설정을 적용하지 못했습니다. 새 패치가 필요합니다.")
+        return sha256_file(output_bundle)
     planned, changed = planned_excel_textassets(bundle, payload, allow_missing_rows=digest in accepted)
     log(f"오프라인 Excel TextAsset 변경 행: {changed}")
     with tempfile.TemporaryDirectory(prefix="tos-ko-export-excel-") as temp:
@@ -887,7 +1083,13 @@ def build_patched_bag_copy(bundle: Path, output_bundle: Path, payload: dict[str,
         copy_with_parent(bundle, output_bundle)
         return sha256_file(output_bundle)
     if digest != bag["source_sha256"]:
-        raise PatchError(f"지원하지 않는 가방 UI 번들 해시입니다: {digest}")
+        copy_with_parent(bundle, output_bundle)
+        if inspect_bag_font(output_bundle, payload)["font_fallback_ok"]:
+            return sha256_file(output_bundle)
+        new_digest, _fallback_changed, _external_added = patch_bag_font_bundle(output_bundle, payload, log, "tos-ko-export-bag-compatible-")
+        if not inspect_bag_font(output_bundle, payload)["font_fallback_ok"]:
+            raise PatchError("오프라인 가방 UI 폰트를 적용하지 못했습니다. 새 패치가 필요합니다.")
+        return new_digest
 
     font_patch = bag["font_patch"]
     env = UnityPy.load(str(bundle))
@@ -968,14 +1170,38 @@ def install_patch(game_data_path: Path, payload_path: Path | None = None, log: C
     bag_hashes = {payload["bag_function_bundle"]["source_sha256"], payload["bag_function_bundle"]["target_sha256"], *payload["bag_function_bundle"].get("accepted_patched_sha256", [])}
     excel_bundle = find_single_bundle(game_data, payload["excel_bundle"]["glob"], excel_hashes)
     bag_bundle = find_single_bundle(game_data, payload["bag_function_bundle"]["glob"], bag_hashes)
-    excel_after = apply_excel_patch(game_data, excel_bundle, payload, log)
-    bag_after = apply_bag_font_patch(game_data, bag_bundle, payload, log)
+    excel_result = apply_excel_patch_report(game_data, excel_bundle, payload, log)
+    bag_result = apply_bag_font_patch_report(game_data, bag_bundle, payload, log)
+    excel_after = str(excel_result["sha256"])
+    bag_after = str(bag_result["sha256"])
     font_status = combined_font_status(inspect_bag_font(bag_bundle, payload), inspect_excel_ui_font(excel_bundle, payload))
-    write_state(game_data, payload, excel_bundle, bag_bundle, excel_after, bag_after)
-    return {"status": "installed", "excel_sha256": excel_after, "bag_sha256": bag_after, "game_data": str(game_data), **font_status}
+    partial_patch = bool(excel_result.get("partial_patch"))
+    metadata = {
+        "partial_patch": partial_patch,
+        "excel_mode": excel_result.get("mode", ""),
+        "bag_mode": bag_result.get("mode", ""),
+        "excel_source_sha256_before": excel_result.get("source_sha256_before", ""),
+        "bag_source_sha256_before": bag_result.get("source_sha256_before", ""),
+        "compatible_rows": int(excel_result.get("compatible_rows") or 0),
+        "skipped_rows": int(excel_result.get("skipped_rows") or 0),
+        "compatibility_report": excel_result.get("compatibility_report", ""),
+        "skipped_by_reason": excel_result.get("skipped_by_reason", {}),
+    }
+    write_state(game_data, payload, excel_bundle, bag_bundle, excel_after, bag_after, metadata)
+    result = {"status": "installed_partial" if partial_patch else "installed", "excel_sha256": excel_after, "bag_sha256": bag_after, "game_data": str(game_data), **metadata, **font_status}
+    result["user_message"] = simple_install_message(result)
+    return result
 
 
-def write_state(game_data: Path, payload: dict[str, Any], excel_bundle: Path, bag_bundle: Path, excel_hash: str, bag_hash: str) -> None:
+def write_state(
+    game_data: Path,
+    payload: dict[str, Any],
+    excel_bundle: Path,
+    bag_bundle: Path,
+    excel_hash: str,
+    bag_hash: str,
+    metadata: dict[str, Any] | None = None,
+) -> None:
     state = {
         "patch_version": payload["patch_version"],
         "installed_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -983,10 +1209,22 @@ def write_state(game_data: Path, payload: dict[str, Any], excel_bundle: Path, ba
         "bag_function_bundle": str(bag_bundle.relative_to(game_data)).replace("\\", "/"),
         "excel_sha256": excel_hash,
         "bag_sha256": bag_hash,
+        **(metadata or {}),
     }
     path = state_dir(game_data) / "install_state.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def read_install_state(game_data: Path) -> dict[str, Any]:
+    path = state_dir(game_data) / "install_state.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def verify_patch(game_data_path: Path, payload_path: Path | None = None, log: Callable[[str], None] = log_noop) -> dict[str, Any]:
@@ -1005,12 +1243,26 @@ def verify_patch(game_data_path: Path, payload_path: Path | None = None, log: Ca
     bag_ok = bag_hash in ({payload["bag_function_bundle"]["target_sha256"]} | set(payload["bag_function_bundle"].get("accepted_patched_sha256", []))) and bool(
         font_status["bag_font_ok"]
     )
+    state = read_install_state(game_data)
+    state_matches = (
+        state.get("patch_version") == payload.get("patch_version")
+        and state.get("excel_sha256") == excel_hash
+        and state.get("bag_sha256") == bag_hash
+        and bool(font_status["font_ok"])
+    )
+    if not (excel_ok and bag_ok) and state_matches:
+        excel_ok = True
+        bag_ok = True
     result = {
-        "status": "patched" if excel_ok and bag_ok else "not_patched",
+        "status": "patched_partial" if excel_ok and bag_ok and state.get("partial_patch") else ("patched" if excel_ok and bag_ok else "not_patched"),
         "excel_sha256": excel_hash,
         "bag_sha256": bag_hash,
         "excel_ok": excel_ok,
         "bag_ok": bag_ok,
+        "partial_patch": bool(state.get("partial_patch")) if state_matches else False,
+        "compatible_rows": int(state.get("compatible_rows") or 0) if state_matches else 0,
+        "skipped_rows": int(state.get("skipped_rows") or 0) if state_matches else 0,
+        "compatibility_report": state.get("compatibility_report", "") if state_matches else "",
         **font_status,
         "game_data": str(game_data),
     }
@@ -1048,6 +1300,7 @@ def write_diagnostic_report(game_data_path: Path, output_path: Path, payload_pat
 def restore_patch(game_data_path: Path, payload_path: Path | None = None, log: Callable[[str], None] = log_noop) -> dict[str, Any]:
     payload = load_payload(payload_path)
     game_data = normalize_game_data(game_data_path)
+    state = read_install_state(game_data)
     excel_bundle = find_single_bundle(
         game_data,
         payload["excel_bundle"]["glob"],
@@ -1060,8 +1313,8 @@ def restore_patch(game_data_path: Path, payload_path: Path | None = None, log: C
     )
     restored: dict[str, str] = {}
     for key, bundle, expected in [
-        ("excel", excel_bundle, payload["excel_bundle"]["source_sha256"]),
-        ("bag", bag_bundle, payload["bag_function_bundle"]["source_sha256"]),
+        ("excel", excel_bundle, str(state.get("excel_source_sha256_before") or payload["excel_bundle"]["source_sha256"])),
+        ("bag", bag_bundle, str(state.get("bag_source_sha256_before") or payload["bag_function_bundle"]["source_sha256"])),
     ]:
         candidates = backup_candidates(game_data, bundle, expected)
         if not candidates:
