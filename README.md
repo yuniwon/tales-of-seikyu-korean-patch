@@ -8,9 +8,9 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 - 게임: Tales of Seikyu
 - 플랫폼: Steam Windows
-- 패치 버전: `0.1.6-playtest.20260625`
-- 지원 Steam buildid: `23906909`
-- 지원 Excel 원본 해시: `d973dcdac6fbde1604b9f9de94f4949d009b0eb4ee0a798438b9a9d44d1f0465`
+- 패치 버전: `0.1.7-playtest.20260701`
+- 지원 Steam buildid: `23980115`
+- 지원 Excel 원본 해시: `eefb061b2955614b0ecd49b486b3252f72123e129f44dde44d7beb394055ee1f`
 - 지원 방식: 로컬 원본 파일에 패치 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드, 진단 리포트 저장
 
 ## 설치
@@ -59,6 +59,20 @@ Steam 경로 확인:
 - 현재 배포본은 Steam Windows의 확인된 번들 해시에만 적용됩니다.
 - 게임 업데이트로 번들 해시가 바뀌면 패처가 설치를 거부할 수 있습니다. 이 경우 새 패치 버전이 필요합니다.
 - 일부 문장/화면은 플레이테스트를 통해 계속 다듬는 중입니다.
+
+## v0.1.7 Hotfix
+
+Steam buildid `23980115`에서 Excel/가방 UI Addressables 번들 파일명과 SHA256이 바뀌어 패처가 설치를 거부하던 문제를 수정했습니다.
+
+- 새 Excel 원본 번들: `configs_assets_excel_36698abb7c087ca9762cdbd1394d516f.bundle`
+- 새 Excel 원본 SHA256: `eefb061b2955614b0ecd49b486b3252f72123e129f44dde44d7beb394055ee1f`
+- 새 Excel 패치 결과 SHA256: `c6607bdea4519e5cc516b920ab520c90ab6ad0566f2ac0fcdb5ee3813ba03711`
+- 새 가방 UI 원본 SHA256: `e4eabffd3e04ce966d55bd16ce0ecdcc7fa3eed880ad99fa28de132d4747e1c0`
+- 새 가방 UI 패치 결과 SHA256: `6fea165c50256b8256bcfcfda61f714f102a1050a0e944fcb64b948de797e2ce`
+- 기존 번역 22,486행은 모두 유지했습니다.
+- 신규 스토리북 본문 2행을 추가 반영해 총 22,488행을 적용합니다.
+- 신규 2행은 중국어 원문만 있는 `story_book__main_content_i18n` row `107`, `108`이며, 플레이어-facing 표기는 `매몰된 바다`로 통일했습니다.
+- 폰트 fallback과 설정 UI font alias 패치도 새 번들 기준으로 다시 검증했습니다.
 
 ## v0.1.6 Hotfix
 

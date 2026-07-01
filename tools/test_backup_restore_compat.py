@@ -8,12 +8,12 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
-EXCEL_BUNDLE_NAME = "configs_assets_excel_133f2db0592e8e139c965fee90b07c1c.bundle"
-BAG_BUNDLE_NAME = "uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle"
+EXCEL_BUNDLE_NAME = "configs_assets_excel_36698abb7c087ca9762cdbd1394d516f.bundle"
+BAG_BUNDLE_NAME = "uiview_assets_bagfunctionitem_c03f77ea6e9f3cdb429d41f0f3886553.bundle"
 EXCEL_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / EXCEL_BUNDLE_NAME
 BAG_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / BAG_BUNDLE_NAME
-EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.6-playtest.20260625/excel.d973dcdac6fbde16.bak"
-BAG_SOURCE = SRC_GAME_DATA / ".korean_patch/backups/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle.43f3dbeb5cc829e9fd282b19bb3a6155de4a7769459296db8a48390be27bfc85.visual_lqa_351.bak"
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
+BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
 sys.path.insert(0, str(REPO / "src"))
 
 from tos_ko_patcher.core import (  # noqa: E402

@@ -6,14 +6,14 @@ Tales of Seikyu 비공식 한글패치 배포 안내입니다.
 
 ## 1) 최신 버전
 
-- 패치 버전: `0.1.6-playtest.20260625`
+- 패치 버전: `0.1.7-playtest.20260701`
 - 지원 플랫폼: Steam Windows
-- 대상 게임 버전/buildid: Steam buildid `23906909`
-- 최근 갱신일: 2026-06-25
+- 대상 게임 버전/buildid: Steam buildid `23980115`
+- 최근 갱신일: 2026-07-01
 
 ## 2) 다운로드
 
-GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.6-playtest.20260625.zip`을 다운로드해 주세요.
+GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.7-playtest.20260701.zip`을 다운로드해 주세요.
 
 다른 곳으로 공유할 때는 파일 재업로드 대신 이 저장소/릴리스 링크를 공유해 주세요.
 
@@ -40,13 +40,16 @@ GitHub Releases에서 `TalesOfSeikyuKoreanPatch-v0.1.6-playtest.20260625.zip`을
 
 ## 5) 이번 패처 수정 사항
 
-- Steam buildid `23906909` 업데이트를 지원합니다.
-- 새 Excel 원본 번들 `configs_assets_excel_133f2db0592e8e139c965fee90b07c1c.bundle`을 지원합니다.
-- 새 원본 SHA256은 `d973dcdac6fbde1604b9f9de94f4949d009b0eb4ee0a798438b9a9d44d1f0465`입니다.
-- 새 패치 결과 SHA256은 `d6076bf4927f4862743b615692802fdc78be8f3c0bd65acc6351cefa002d86fc`입니다.
+- Steam buildid `23980115` 업데이트를 지원합니다.
+- 새 Excel 원본 번들 `configs_assets_excel_36698abb7c087ca9762cdbd1394d516f.bundle`을 지원합니다.
+- 새 Excel 원본 SHA256은 `eefb061b2955614b0ecd49b486b3252f72123e129f44dde44d7beb394055ee1f`입니다.
+- 새 Excel 패치 결과 SHA256은 `c6607bdea4519e5cc516b920ab520c90ab6ad0566f2ac0fcdb5ee3813ba03711`입니다.
+- 새 가방 UI 원본 SHA256은 `e4eabffd3e04ce966d55bd16ce0ecdcc7fa3eed880ad99fa28de132d4747e1c0`입니다.
+- 새 가방 UI 패치 결과 SHA256은 `6fea165c50256b8256bcfcfda61f714f102a1050a0e944fcb64b948de797e2ce`입니다.
 - 기존 번역 22,486행은 모두 유지했습니다.
-- 번역 대상 row 추가/삭제/원문 변경은 0건으로 확인했습니다.
-- raw 변경 TextAsset은 `item_item`, `story_init`, `story_trigger` 3개였고, CJK 문자열 추가/삭제는 확인되지 않았습니다.
+- 신규 스토리북 본문 2행을 추가 반영해 총 22,488행을 적용합니다.
+- 신규 2행은 중국어 원문만 있는 `story_book__main_content_i18n` row `107`, `108`이며, 플레이어-facing 표기는 `매몰된 바다`로 통일했습니다.
+- 폰트 fallback과 설정 UI font alias 패치도 새 번들 기준으로 다시 검증했습니다.
 - 지원하지 않는 게임 업데이트 해시를 감지하면 `게임이 업데이트 되었습니다, 댓글로 제보해주시면 빠르게 패치해드리겠습니다` 안내 창을 표시합니다.
 
 ## 6) 기존 패처 개선 사항

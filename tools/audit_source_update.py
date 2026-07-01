@@ -9,8 +9,8 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
-PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.3-playtest.20260623/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle.c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9.bak"
-CURRENT_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.6-playtest.20260625/excel.d973dcdac6fbde16.bak"
+PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.6-playtest.20260625/excel.d973dcdac6fbde16.bak"
+CURRENT_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
 sys.path.insert(0, str(REPO / "src"))
 
 from tos_ko_patcher.core import (  # noqa: E402
@@ -23,6 +23,14 @@ from tos_ko_patcher.core import (  # noqa: E402
 
 CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]")
 PRINTABLE_RE = re.compile(r"[\x20-\x7e\u3000-\u9fff\uf900-\ufaff\uac00-\ud7af\uff00-\uffef]{2,}")
+EXPECTED_ADDED_ROWS = {
+    ("story_book__main_content_i18n", "107", "story_book__main/content_i18n_7be0abd1a80050601ebd44dbc1822f10"),
+    ("story_book__main_content_i18n", "108", "story_book__main/content_i18n_a283de7fe8984a30c228d8e6ad6bd3ef"),
+}
+EXPECTED_CHANGED_ROWS = {
+    ("story_book__main_content_i18n", "41", "story_book__main/content_i18n_ce0f35a51f14a082b33fcc957bba36c7"),
+}
+EXPECTED_CJK_DELTA_TEXTASSETS = {"husbandry_pet_info", "story_book__main_content_i18n"}
 
 
 def row_index(assets: dict[str, bytes]) -> tuple[dict[str, dict[tuple[str, str], dict[str, str]]], dict[str, str]]:
@@ -110,7 +118,15 @@ def main() -> int:
         for item in changed_assets
         if item["added_cjk_strings"] or item["removed_cjk_strings"]
     ]
-    ok = not added_rows and not removed_rows and not changed_rows and not assets_with_cjk_delta
+    added_identities = {(row["textasset"], row["row_id"], row["key"]) for row in added_rows}
+    changed_identities = {(row["textasset"], row["row_id"], row["key"]) for row in changed_rows}
+    cjk_delta_textassets = {item["textasset"] for item in assets_with_cjk_delta}
+    ok = (
+        added_identities == EXPECTED_ADDED_ROWS
+        and not removed_rows
+        and changed_identities == EXPECTED_CHANGED_ROWS
+        and cjk_delta_textassets == EXPECTED_CJK_DELTA_TEXTASSETS
+    )
     result = {
         "status": "pass" if ok else "fail",
         "previous_source_sha256": sha256_file(PREVIOUS_EXCEL_SOURCE),
@@ -127,6 +143,9 @@ def main() -> int:
         "added_rows_count": len(added_rows),
         "removed_rows_count": len(removed_rows),
         "changed_rows_count": len(changed_rows),
+        "expected_added_rows_count": len(EXPECTED_ADDED_ROWS),
+        "expected_changed_rows_count": len(EXPECTED_CHANGED_ROWS),
+        "expected_cjk_delta_textassets": sorted(EXPECTED_CJK_DELTA_TEXTASSETS),
         "added_rows_sample": added_rows[:20],
         "removed_rows_sample": removed_rows[:20],
         "changed_rows_sample": changed_rows[:20],

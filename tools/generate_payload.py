@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import csv
 import shutil
 import subprocess
 import sys
@@ -29,13 +30,18 @@ from tos_ko_patcher.core import (  # noqa: E402
     write_string,
 )
 
-PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.3-playtest.20260623/configs_assets_excel_f49ac7551e791fb388bd02ccb81a6a88.bundle.c7cc2e47a44f1c881c7c9c9d62d1a4b51060f061025a5f4ef663abc05bce1cc9.bak"
-CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_133f2db0592e8e139c965fee90b07c1c.bundle"
-EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.6-playtest.20260625/excel.d973dcdac6fbde16.bak"
-BAG_SOURCE = SRC_GAME_DATA / ".korean_patch/backups/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle.43f3dbeb5cc829e9fd282b19bb3a6155de4a7769459296db8a48390be27bfc85.visual_lqa_351.bak"
-BAG_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64/uiview_assets_bagfunctionitem_4151e323e15f7662e9ca55d7135ecfd4.bundle"
+PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.6-playtest.20260625/excel.d973dcdac6fbde16.bak"
+CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_36698abb7c087ca9762cdbd1394d516f.bundle"
+CURRENT_BAG_BUNDLE_NAME = "uiview_assets_bagfunctionitem_c03f77ea6e9f3cdb429d41f0f3886553.bundle"
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
+BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
+BAG_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / CURRENT_BAG_BUNDLE_NAME
 PREVIOUS_PAYLOAD = REPO / "payload/patch_payload.json"
 STEAM_MANIFEST = SRC_GAME_DATA.parents[2] / "appmanifest_2340520.acf"
+SOURCE_UPDATE_WORKSETS = [
+    SRC_GAME_DATA
+    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_story_book_main_content_352_working_set.tsv"
+]
 
 UI_CONFIG_JAPANESE = "i18n_uiconfig_japanese"
 OLD_UI_FONT_ALIAS = "line_seed_jp"
@@ -167,6 +173,61 @@ def build_rows(
     return rows, dropped, remapped, source_text_remapped
 
 
+def read_tsv(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return list(csv.DictReader(handle, delimiter="\t"))
+
+
+def source_update_rows(source_bundle: Path) -> list[dict[str, Any]]:
+    source_identities = source_identity_index(source_bundle)
+    rows: list[dict[str, Any]] = []
+    for workset in SOURCE_UPDATE_WORKSETS:
+        for row in read_tsv(workset):
+            if (row.get("review_status") or "").strip() != "proposal_ready":
+                continue
+            textasset = (row.get("source_textasset") or "").strip()
+            row_id = (row.get("row_id") or "").strip()
+            key = (row.get("dialog_key") or "").strip()
+            korean = (row.get("korean_proposal") or "").strip()
+            if not textasset or not row_id or not key or not korean:
+                raise RuntimeError(f"incomplete source-update row in {workset}: row_id={row_id!r}")
+            if "귀허" in korean:
+                raise RuntimeError(f"forbidden legacy term remains in source-update row: {workset} row_id={row_id}")
+            if (row_id, key) not in source_identities.get(textasset, set()):
+                raise RuntimeError(f"source-update row does not match current source: {textasset} {(row_id, key)}")
+            rows.append(
+                {
+                    "textasset": textasset,
+                    "schema": schema_for_textasset(textasset),
+                    "row_id": row_id,
+                    "key": key,
+                    "source_ja": korean,
+                }
+            )
+    return rows
+
+
+def merge_patch_rows(base_rows: list[dict[str, Any]], overlay_rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int, int]:
+    merged: list[dict[str, Any]] = []
+    indexes: dict[tuple[str, str, str], int] = {}
+    for row in base_rows:
+        key = (str(row["textasset"]), str(row["row_id"]), str(row["key"]))
+        indexes[key] = len(merged)
+        merged.append(row)
+    added = 0
+    replaced = 0
+    for row in overlay_rows:
+        key = (str(row["textasset"]), str(row["row_id"]), str(row["key"]))
+        if key in indexes:
+            merged[indexes[key]] = row
+            replaced += 1
+        else:
+            indexes[key] = len(merged)
+            merged.append(row)
+            added += 1
+    return merged, added, replaced
+
+
 def source_diff(previous_source: Path, current_source: Path) -> dict[str, Any]:
     previous = source_identity_index(previous_source)
     current = source_identity_index(current_source)
@@ -243,6 +304,8 @@ def apply_bag_to_temp(source: Path, payload: dict[str, Any]) -> str:
 def main() -> int:
     previous_payload = load_previous_release_payload()
     rows, dropped_rows, remapped_rows, source_text_remapped_rows = build_rows(previous_payload, EXCEL_SOURCE, PREVIOUS_EXCEL_SOURCE)
+    overlay_rows = source_update_rows(EXCEL_SOURCE)
+    rows, source_update_added_rows, source_update_replaced_rows = merge_patch_rows(rows, overlay_rows)
     diff = source_diff(PREVIOUS_EXCEL_SOURCE, EXCEL_SOURCE)
     payload: dict[str, Any] = {
         "patch_version": PATCH_VERSION,
@@ -260,6 +323,10 @@ def main() -> int:
             "remapped_previous_payload_rows_sample": remapped_rows[:20],
             "source_text_remapped_previous_payload_rows": len(source_text_remapped_rows),
             "source_text_remapped_previous_payload_rows_sample": source_text_remapped_rows[:20],
+            "source_update_worksets": [str(path) for path in SOURCE_UPDATE_WORKSETS],
+            "source_update_rows": len(overlay_rows),
+            "source_update_added_rows": source_update_added_rows,
+            "source_update_replaced_rows": source_update_replaced_rows,
             "source_diff_from_previous_build": diff,
             "bag_source_sha256": sha256_file(BAG_SOURCE),
             "bag_reference_current_sha256": sha256_file(BAG_CURRENT),
@@ -320,6 +387,9 @@ def main() -> int:
                 "dropped_previous_payload_rows": len(dropped_rows),
                 "remapped_previous_payload_rows": len(remapped_rows),
                 "source_text_remapped_previous_payload_rows": len(source_text_remapped_rows),
+                "source_update_rows": len(overlay_rows),
+                "source_update_added_rows": source_update_added_rows,
+                "source_update_replaced_rows": source_update_replaced_rows,
                 "steam_buildid": current_build_id(),
                 "excel_source_sha256": payload["excel_bundle"]["source_sha256"],
                 "excel_target_sha256": payload["excel_bundle"]["target_sha256"],

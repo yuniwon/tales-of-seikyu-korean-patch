@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
-EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.6-playtest.20260625/excel.d973dcdac6fbde16.bak"
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
 sys.path.insert(0, str(REPO / "src"))
 
 from tos_ko_patcher.core import (  # noqa: E402

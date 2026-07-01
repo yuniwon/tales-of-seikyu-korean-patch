@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.6-playtest.20260625"
+PATCH_VERSION = "0.1.7-playtest.20260701"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -654,7 +654,7 @@ def inspect_excel_ui_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]
     }
 
 
-def planned_excel_textassets(bundle: Path, payload: dict[str, Any]) -> tuple[dict[str, bytes], int]:
+def planned_excel_textassets(bundle: Path, payload: dict[str, Any], allow_missing_rows: bool = False) -> tuple[dict[str, bytes], int]:
     raw_by_name = textassets_from_bundle(bundle)
     by_textasset: dict[str, list[dict[str, Any]]] = {}
     for entry in payload["excel_bundle"]["patch_rows"]:
@@ -673,6 +673,8 @@ def planned_excel_textassets(bundle: Path, payload: dict[str, Any]) -> tuple[dic
             key = (str(entry["row_id"]), str(entry["key"]))
             row = lookup.get(key)
             if row is None:
+                if allow_missing_rows:
+                    continue
                 raise PatchError(f"패치 대상 행을 찾지 못했습니다: {textasset} {key}")
             if str(row.get("source_ja", "")) != entry["source_ja"]:
                 row["source_ja"] = entry["source_ja"]
@@ -703,7 +705,7 @@ def apply_excel_patch(game_data: Path, bundle: Path, payload: dict[str, Any], lo
     if digest != excel["source_sha256"] and digest not in accepted:
         raise PatchError(f"지원하지 않는 Excel 번들 해시입니다: {digest}")
     backup_file(game_data, bundle, digest, log)
-    planned, changed = planned_excel_textassets(bundle, payload)
+    planned, changed = planned_excel_textassets(bundle, payload, allow_missing_rows=digest in accepted)
     log(f"Excel TextAsset 변경 행: {changed}")
     with tempfile.TemporaryDirectory(prefix="tos-ko-excel-") as temp:
         saved = save_textassets_to_bundle(bundle, Path(temp), planned)
@@ -865,7 +867,7 @@ def build_patched_excel_copy(bundle: Path, output_bundle: Path, payload: dict[st
         return sha256_file(output_bundle)
     if digest != excel["source_sha256"] and digest not in accepted:
         raise PatchError(f"지원하지 않는 Excel 번들 해시입니다: {digest}")
-    planned, changed = planned_excel_textassets(bundle, payload)
+    planned, changed = planned_excel_textassets(bundle, payload, allow_missing_rows=digest in accepted)
     log(f"오프라인 Excel TextAsset 변경 행: {changed}")
     with tempfile.TemporaryDirectory(prefix="tos-ko-export-excel-") as temp:
         saved = save_textassets_to_bundle(bundle, Path(temp), planned)
