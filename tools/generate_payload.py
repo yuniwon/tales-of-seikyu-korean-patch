@@ -31,10 +31,10 @@ from tos_ko_patcher.core import (  # noqa: E402
     write_string,
 )
 
-PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.6-playtest.20260625/excel.d973dcdac6fbde16.bak"
-CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_36698abb7c087ca9762cdbd1394d516f.bundle"
+PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
+CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_d3c3ead9e721d2fd47b223b9c32e462d.bundle"
 CURRENT_BAG_BUNDLE_NAME = "uiview_assets_bagfunctionitem_c03f77ea6e9f3cdb429d41f0f3886553.bundle"
-EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.10-playtest.20260702/excel.6482ecc747ec57e0.bak"
 BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
 BAG_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / CURRENT_BAG_BUNDLE_NAME
 PREVIOUS_PAYLOAD = REPO / "payload/patch_payload.json"
@@ -121,6 +121,75 @@ def source_key_index(bundle: Path) -> dict[str, dict[str, str]]:
     return result
 
 
+def source_key_row_index(bundle: Path) -> dict[str, dict[str, dict[str, object]]]:
+    assets = textassets_from_bundle(bundle)
+    result: dict[str, dict[str, dict[str, object]]] = {}
+    for name, raw in assets.items():
+        schema = schema_for_textasset(name)
+        try:
+            table = parse_string_table(name, raw, schema)
+        except Exception:
+            continue
+        key_name = key_column_for_schema(schema)
+        by_key: dict[str, dict[str, object]] = {}
+        duplicate_keys: set[str] = set()
+        for row in table.rows:
+            key = str(row.get(key_name, ""))
+            if key in by_key:
+                duplicate_keys.add(key)
+            by_key[key] = row
+        for key in duplicate_keys:
+            by_key.pop(key, None)
+        result[name] = by_key
+    return result
+
+
+def source_fingerprint_index(bundle: Path) -> dict[str, dict[str, dict[str, object]]]:
+    assets = textassets_from_bundle(bundle)
+    result: dict[str, dict[str, dict[str, object]]] = {}
+    for name, raw in assets.items():
+        schema = schema_for_textasset(name)
+        try:
+            table = parse_string_table(name, raw, schema)
+        except Exception:
+            continue
+        by_fingerprint: dict[str, dict[str, object]] = {}
+        duplicate_fingerprints: set[str] = set()
+        for row in table.rows:
+            fingerprint = row_source_fingerprint(row, schema)
+            if fingerprint in by_fingerprint:
+                duplicate_fingerprints.add(fingerprint)
+            by_fingerprint[fingerprint] = row
+        for fingerprint in duplicate_fingerprints:
+            by_fingerprint.pop(fingerprint, None)
+        result[name] = by_fingerprint
+    return result
+
+
+def source_ja_text_index(bundle: Path) -> dict[str, dict[str, dict[str, object]]]:
+    assets = textassets_from_bundle(bundle)
+    result: dict[str, dict[str, dict[str, object]]] = {}
+    for name, raw in assets.items():
+        schema = schema_for_textasset(name)
+        try:
+            table = parse_string_table(name, raw, schema)
+        except Exception:
+            continue
+        by_source_ja: dict[str, dict[str, object]] = {}
+        duplicate_source_ja: set[str] = set()
+        for row in table.rows:
+            source_ja = normalize_source_text(str(row.get("source_ja", "")))
+            if not source_ja:
+                continue
+            if source_ja in by_source_ja:
+                duplicate_source_ja.add(source_ja)
+            by_source_ja[source_ja] = row
+        for source_ja in duplicate_source_ja:
+            by_source_ja.pop(source_ja, None)
+        result[name] = by_source_ja
+    return result
+
+
 def normalize_source_text(value: str) -> str:
     return " ".join(value.split())
 
@@ -179,27 +248,63 @@ def build_rows(
     previous_payload: dict[str, Any],
     source_bundle: Path,
     previous_source_bundle: Path,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-    source_identities = source_identity_index(source_bundle)
-    source_keys = source_key_index(source_bundle)
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    source_lookup = source_row_lookup(source_bundle)
+    source_keys = source_key_row_index(source_bundle)
+    source_fingerprints = source_fingerprint_index(source_bundle)
+    source_ja_texts = source_ja_text_index(source_bundle)
     current_rows = source_row_index(source_bundle)
     previous_rows = source_row_index(previous_source_bundle)
     rows: list[dict[str, Any]] = []
     dropped: list[dict[str, Any]] = []
     remapped: list[dict[str, Any]] = []
+    fingerprint_remapped: list[dict[str, Any]] = []
     source_text_remapped: list[dict[str, Any]] = []
     for entry in previous_payload["excel_bundle"]["patch_rows"]:
-        identity = (str(entry["row_id"]), str(entry["key"]))
         textasset = str(entry["textasset"])
-        if identity in source_identities.get(textasset, set()):
-            rows.append(entry)
+        schema = str(entry["schema"])
+        row_id = str(entry["row_id"])
+        key = str(entry["key"])
+        expected_fingerprint = str(entry.get("source_fingerprint") or "")
+        identity = (textasset, row_id, key)
+        source_row = source_lookup.get(identity)
+        if source_row is not None:
+            if not expected_fingerprint or row_source_fingerprint(source_row, schema) == expected_fingerprint:
+                rows.append(entry)
+            else:
+                dropped.append({**entry, "drop_reason": "source_changed"})
             continue
-        current_row_id = source_keys.get(textasset, {}).get(str(entry["key"]))
-        if current_row_id:
+        source_row = source_keys.get(textasset, {}).get(key)
+        if source_row is not None:
+            current_fingerprint = row_source_fingerprint(source_row, schema)
+            if expected_fingerprint and current_fingerprint != expected_fingerprint:
+                dropped.append({**entry, "drop_reason": "key_remap_source_changed", "new_row_id": str(source_row["row_id"])})
+                continue
             updated = dict(entry)
-            updated["row_id"] = current_row_id
+            updated["row_id"] = str(source_row["row_id"])
             rows.append(updated)
-            remapped.append({**entry, "new_row_id": current_row_id})
+            remapped.append({**entry, "new_row_id": str(source_row["row_id"])})
+            continue
+        if expected_fingerprint:
+            source_row = source_fingerprints.get(textasset, {}).get(expected_fingerprint)
+            if source_row is not None:
+                key_name = key_column_for_schema(schema)
+                updated = dict(entry)
+                updated["row_id"] = str(source_row["row_id"])
+                updated["key"] = str(source_row.get(key_name, ""))
+                rows.append(updated)
+                fingerprint_remapped.append({**entry, "new_row_id": updated["row_id"], "new_key": updated["key"]})
+                continue
+        previous_row = previous_rows.get(textasset, {}).get(row_id)
+        previous_source_ja = previous_row["source_ja_normalized"] if previous_row else ""
+        source_row = source_ja_texts.get(textasset, {}).get(previous_source_ja) if previous_source_ja else None
+        if source_row is not None:
+            key_name = key_column_for_schema(schema)
+            updated = dict(entry)
+            updated["row_id"] = str(source_row["row_id"])
+            updated["key"] = str(source_row.get(key_name, ""))
+            rows.append(updated)
+            source_text_remapped.append({**entry, "new_row_id": updated["row_id"], "new_key": updated["key"]})
             continue
         previous_row = previous_rows.get(textasset, {}).get(str(entry["row_id"]))
         current_row = current_rows.get(textasset, {}).get(str(entry["row_id"]))
@@ -209,8 +314,8 @@ def build_rows(
             rows.append(updated)
             source_text_remapped.append({**entry, "new_key": current_row["key"]})
             continue
-        dropped.append(entry)
-    return rows, dropped, remapped, source_text_remapped
+        dropped.append({**entry, "drop_reason": "missing_or_changed"})
+    return rows, dropped, remapped, fingerprint_remapped, source_text_remapped
 
 
 def read_tsv(path: Path) -> list[dict[str, str]]:
@@ -218,9 +323,11 @@ def read_tsv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle, delimiter="\t"))
 
 
-def source_update_rows(source_bundle: Path) -> list[dict[str, Any]]:
+def source_update_rows(source_bundle: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     source_identities = source_identity_index(source_bundle)
+    current_rows = source_row_index(source_bundle)
     rows: list[dict[str, Any]] = []
+    remapped: list[dict[str, Any]] = []
     for workset in SOURCE_UPDATE_WORKSETS:
         for row in read_tsv(workset):
             if (row.get("review_status") or "").strip() != "proposal_ready":
@@ -234,7 +341,11 @@ def source_update_rows(source_bundle: Path) -> list[dict[str, Any]]:
             if "귀허" in korean:
                 raise RuntimeError(f"forbidden legacy term remains in source-update row: {workset} row_id={row_id}")
             if (row_id, key) not in source_identities.get(textasset, set()):
-                raise RuntimeError(f"source-update row does not match current source: {textasset} {(row_id, key)}")
+                current_row = current_rows.get(textasset, {}).get(row_id)
+                if not current_row:
+                    raise RuntimeError(f"source-update row does not match current source: {textasset} {(row_id, key)}")
+                remapped.append({"textasset": textasset, "row_id": row_id, "old_key": key, "new_key": current_row["key"]})
+                key = current_row["key"]
             rows.append(
                 {
                     "textasset": textasset,
@@ -244,7 +355,7 @@ def source_update_rows(source_bundle: Path) -> list[dict[str, Any]]:
                     "source_ja": korean,
                 }
             )
-    return rows
+    return rows, remapped
 
 
 def merge_patch_rows(base_rows: list[dict[str, Any]], overlay_rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int, int]:
@@ -368,8 +479,10 @@ def apply_bag_to_temp(source: Path, payload: dict[str, Any]) -> str:
 
 def main() -> int:
     previous_payload = load_previous_release_payload()
-    rows, dropped_rows, remapped_rows, source_text_remapped_rows = build_rows(previous_payload, EXCEL_SOURCE, PREVIOUS_EXCEL_SOURCE)
-    overlay_rows = source_update_rows(EXCEL_SOURCE)
+    rows, dropped_rows, remapped_rows, fingerprint_remapped_rows, source_text_remapped_rows = build_rows(
+        previous_payload, EXCEL_SOURCE, PREVIOUS_EXCEL_SOURCE
+    )
+    overlay_rows, source_update_remapped_rows = source_update_rows(EXCEL_SOURCE)
     rows, source_update_added_rows, source_update_replaced_rows = merge_patch_rows(rows, overlay_rows)
     rows = apply_surface_text_overrides(rows)
     rows = enrich_rows_with_source_fingerprints(rows, EXCEL_SOURCE)
@@ -388,10 +501,14 @@ def main() -> int:
             "dropped_previous_payload_rows_sample": dropped_rows[:20],
             "remapped_previous_payload_rows": len(remapped_rows),
             "remapped_previous_payload_rows_sample": remapped_rows[:20],
+            "fingerprint_remapped_previous_payload_rows": len(fingerprint_remapped_rows),
+            "fingerprint_remapped_previous_payload_rows_sample": fingerprint_remapped_rows[:20],
             "source_text_remapped_previous_payload_rows": len(source_text_remapped_rows),
             "source_text_remapped_previous_payload_rows_sample": source_text_remapped_rows[:20],
             "source_update_worksets": [str(path) for path in SOURCE_UPDATE_WORKSETS],
             "source_update_rows": len(overlay_rows),
+            "source_update_remapped_rows": len(source_update_remapped_rows),
+            "source_update_remapped_rows_sample": source_update_remapped_rows[:20],
             "source_update_added_rows": source_update_added_rows,
             "source_update_replaced_rows": source_update_replaced_rows,
             "source_diff_from_previous_build": diff,
@@ -454,8 +571,10 @@ def main() -> int:
                 "patch_rows": len(rows),
                 "dropped_previous_payload_rows": len(dropped_rows),
                 "remapped_previous_payload_rows": len(remapped_rows),
+                "fingerprint_remapped_previous_payload_rows": len(fingerprint_remapped_rows),
                 "source_text_remapped_previous_payload_rows": len(source_text_remapped_rows),
                 "source_update_rows": len(overlay_rows),
+                "source_update_remapped_rows": len(source_update_remapped_rows),
                 "source_update_added_rows": source_update_added_rows,
                 "source_update_replaced_rows": source_update_replaced_rows,
                 "steam_buildid": current_build_id(),

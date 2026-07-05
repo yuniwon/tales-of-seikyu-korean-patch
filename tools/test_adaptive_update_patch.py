@@ -12,7 +12,7 @@ from typing import Any
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
 EXCEL_BUNDLE_NAME = "configs_assets_excel_future_update.bundle"
-EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.10-playtest.20260702/excel.6482ecc747ec57e0.bak"
 BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
 BAG_BUNDLE_NAME = "uiview_assets_bagfunctionitem_future_update.bundle"
 sys.path.insert(0, str(REPO / "src"))

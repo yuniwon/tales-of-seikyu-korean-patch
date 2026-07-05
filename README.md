@@ -10,9 +10,9 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 - 게임: Tales of Seikyu
 - 플랫폼: Steam Windows
-- 패치 버전: `0.1.10-playtest.20260702`
-- 지원 Steam buildid: `23980115`
-- 지원 Excel 원본 해시: `eefb061b2955614b0ecd49b486b3252f72123e129f44dde44d7beb394055ee1f`
+- 패치 버전: `0.1.11-playtest.20260705`
+- 지원 Steam buildid: `24036018`
+- 지원 Excel 원본 해시: `6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44`
 - 지원 방식: 로컬 원본 파일에 패치 적용, 업데이트 후 맞는 문장 자동 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드, 진단 리포트 저장
 
 ## 설치
@@ -62,6 +62,20 @@ Steam 경로 확인:
 - 새로 추가되었거나 원문이 바뀐 문장은 원문으로 보일 수 있습니다. 이 경우 패처가 제보 파일을 저장합니다.
 - 게임 파일 구조가 크게 바뀌면 새 패치 버전이 필요합니다.
 - 일부 문장/화면은 플레이테스트를 통해 계속 다듬는 중입니다.
+
+## v0.1.11 Hotfix
+
+Steam buildid `24036018` 업데이트 후 메뉴 일부만 한국어로 적용되고 대사 대부분이 원문으로 남던 문제를 수정했습니다.
+
+- 새 Excel 원본 번들: `configs_assets_excel_d3c3ead9e721d2fd47b223b9c32e462d.bundle`
+- 새 Excel 원본 SHA256: `6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44`
+- 새 Excel 패치 결과 SHA256: `e96a3f92bd30f3ad265b40f601b3eca87794b9c65ba3b3e496a89c8b0f9e0f1a`
+- 기존 22,488행 중 원문이 그대로 확인된 22,459행을 유지했습니다.
+- 그중 17,976행은 새 row_id로 자동 재매핑했고, 2행은 일본어 원문 기준으로 재매핑했습니다.
+- 신규 스토리북 2행은 이번 빌드의 새 key에 다시 연결해 총 22,461행을 적용합니다.
+- 실제 원문 변경 또는 삭제 가능성이 있는 29행은 자동 덮어쓰기에서 제외했습니다.
+- 앞으로 게임 업데이트로 row_id가 크게 바뀌어도, 같은 key와 원문 지문이 확인되는 문장은 자동으로 따라가도록 호환 설치 로직을 보강했습니다.
+- v0.1.10 부분 적용 상태에서도 `한국어 패치 설치/업데이트`를 다시 누르면 전체 적용 상태로 복구됩니다.
 
 ## v0.1.10 Hotfix
 
@@ -155,6 +169,8 @@ Steam buildid `23869434`에서 Excel Addressables 번들 파일명과 SHA256이 
 ```powershell
 $env:PYTHONUTF8='1'
 python tools\generate_payload.py
+python tools\audit_current_update_remap.py
+python tools\test_compatible_remap_matching.py
 python tools\test_adaptive_update_patch.py
 python tools\test_patcher_features.py
 python tools\test_update_logic.py

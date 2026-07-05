@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.10-playtest.20260702"
+PATCH_VERSION = "0.1.11-playtest.20260705"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -688,6 +688,21 @@ def make_skip_detail(textasset: str, entry: dict[str, Any], reason: str, row: di
     return detail
 
 
+def unique_lookup(rows: list[dict[str, object]], key_func: Callable[[dict[str, object]], str]) -> dict[str, dict[str, object]]:
+    lookup: dict[str, dict[str, object]] = {}
+    duplicates: set[str] = set()
+    for row in rows:
+        key = key_func(row)
+        if not key:
+            continue
+        if key in lookup:
+            duplicates.add(key)
+        lookup[key] = row
+    for key in duplicates:
+        lookup.pop(key, None)
+    return lookup
+
+
 def planned_excel_textassets_report(
     bundle: Path,
     payload: dict[str, Any],
@@ -743,11 +758,24 @@ def planned_excel_textassets_report(
             raise
         key_column = key_column_for_schema(schema)
         lookup = {(str(row["row_id"]), str(row.get(key_column, ""))): row for row in table.rows}
+        key_lookup: dict[str, dict[str, object]] = {}
+        fingerprint_lookup: dict[str, dict[str, object]] = {}
+        if compatible_only:
+            key_lookup = unique_lookup(table.rows, lambda row: str(row.get(key_column, "")))
+            fingerprint_lookup = unique_lookup(table.rows, lambda row: row_source_fingerprint(row, schema))
         touched = False
         for entry in entries:
             report["total_rows"] += 1
             key = (str(entry["row_id"]), str(entry["key"]))
             row = lookup.get(key)
+            match_method = "identity"
+            expected_fingerprint = str(entry.get("source_fingerprint") or "")
+            if row is None and compatible_only:
+                row = key_lookup.get(str(entry["key"]))
+                match_method = "key"
+            if row is None and compatible_only and expected_fingerprint:
+                row = fingerprint_lookup.get(expected_fingerprint)
+                match_method = "source_fingerprint"
             if row is None:
                 if allow_missing_rows or compatible_only:
                     skip(make_skip_detail(textasset, entry, "missing_row", None, schema))
@@ -757,8 +785,9 @@ def planned_excel_textassets_report(
                 if str(row.get("source_ja", "")) == entry["source_ja"]:
                     report["compatible_rows"] += 1
                     report["already_patched_rows"] += 1
+                    matched_by = report.setdefault("matched_by", {})
+                    matched_by[match_method] = int(matched_by.get(match_method, 0)) + 1
                     continue
-                expected_fingerprint = str(entry.get("source_fingerprint") or "")
                 if not expected_fingerprint:
                     skip(make_skip_detail(textasset, entry, "missing_source_fingerprint", row, schema))
                     continue
@@ -766,9 +795,12 @@ def planned_excel_textassets_report(
                 if current_fingerprint != expected_fingerprint:
                     detail = make_skip_detail(textasset, entry, "source_changed", row, schema)
                     detail["expected_fingerprint"] = expected_fingerprint
+                    detail["match_method"] = match_method
                     skip(detail)
                     continue
                 report["compatible_rows"] += 1
+                matched_by = report.setdefault("matched_by", {})
+                matched_by[match_method] = int(matched_by.get(match_method, 0)) + 1
             if str(row.get("source_ja", "")) != entry["source_ja"]:
                 row["source_ja"] = entry["source_ja"]
                 changed += 1
