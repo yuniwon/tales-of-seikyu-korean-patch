@@ -10,7 +10,7 @@ Tales of Seikyu Steam Windows판용 비공식 한국어 패처입니다.
 
 - 게임: Tales of Seikyu
 - 플랫폼: Steam Windows
-- 패치 버전: `0.1.11-playtest.20260705`
+- 패치 버전: `0.1.12-playtest.20260705`
 - 지원 Steam buildid: `24036018`
 - 지원 Excel 원본 해시: `6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44`
 - 지원 방식: 로컬 원본 파일에 패치 적용, 업데이트 후 맞는 문장 자동 적용, 설치 전 자동 백업, GUI 복구, GitHub 최신 패처 확인/다운로드, 진단 리포트 저장
@@ -62,6 +62,17 @@ Steam 경로 확인:
 - 새로 추가되었거나 원문이 바뀐 문장은 원문으로 보일 수 있습니다. 이 경우 패처가 제보 파일을 저장합니다.
 - 게임 파일 구조가 크게 바뀌면 새 패치 버전이 필요합니다.
 - 일부 문장/화면은 플레이테스트를 통해 계속 다듬는 중입니다.
+
+## v0.1.12 Hotfix
+
+Steam buildid `24036018` 업데이트에서 실제로 원문이 바뀐 소수 행의 번역 검토분을 반영했습니다.
+
+- 2026-07-05 변경행 검토 workset `non_dialogue_source_update_20260705_changed_rows_353_working_set.tsv`를 payload 생성 overlay에 추가했습니다.
+- 검토 대상 27행 중 4행은 최신 원문 기준으로 수정했고, 22행은 기존 번역을 유지했으며, 1행은 의미 변화 없는 선행 개행 변경으로 재사용했습니다.
+- 기존 스토리북 source-update 2행까지 포함해 source-update overlay 총 29행을 반영했습니다.
+- 최종 Excel 적용 행은 22,487행입니다.
+- 새 Excel 패치 결과 SHA256: `8d1a44e05d299aa5a4300db0aa4219847fff1068640b13840af9fd794dd14c59`
+- 설정/가방 UI 폰트 핫픽스와 업데이트 row remap 로직은 v0.1.11과 동일하게 유지됩니다.
 
 ## v0.1.11 Hotfix
 
@@ -169,6 +180,7 @@ Steam buildid `23869434`에서 Excel Addressables 번들 파일명과 SHA256이 
 ```powershell
 $env:PYTHONUTF8='1'
 python tools\generate_payload.py
+python tools\check_353_workset.py
 python tools\audit_current_update_remap.py
 python tools\test_compatible_remap_matching.py
 python tools\test_adaptive_update_patch.py

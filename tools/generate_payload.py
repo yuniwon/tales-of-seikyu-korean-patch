@@ -41,7 +41,9 @@ PREVIOUS_PAYLOAD = REPO / "payload/patch_payload.json"
 STEAM_MANIFEST = SRC_GAME_DATA.parents[2] / "appmanifest_2340520.acf"
 SOURCE_UPDATE_WORKSETS = [
     SRC_GAME_DATA
-    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_story_book_main_content_352_working_set.tsv"
+    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_story_book_main_content_352_working_set.tsv",
+    SRC_GAME_DATA
+    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_20260705_changed_rows_353_working_set.tsv",
 ]
 
 SURFACE_TEXT_OVERRIDES = {

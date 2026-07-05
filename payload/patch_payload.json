@@ -1,5 +1,5 @@
 {
-  "patch_version": "0.1.11-playtest.20260705",
+  "patch_version": "0.1.12-playtest.20260705",
   "game": "Tales of Seikyu",
   "language": "ko",
   "supported_platform": "Steam Windows",
@@ -7,421 +7,20 @@
     "steam_buildid": "24036018",
     "excel_source_sha256": "6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44",
     "previous_excel_source_sha256": "eefb061b2955614b0ecd49b486b3252f72123e129f44dde44d7beb394055ee1f",
-    "previous_payload_rows": 22488,
-    "dropped_previous_payload_rows": 29,
-    "dropped_previous_payload_rows_sample": [
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "4085",
-        "key": "1808421512566280",
-        "source_ja": "<i>\"{c.playername}, 우리가 처음 만난 곳을 기억하나? 고양이 모습으로 낮잠을 자던 나를 네가 깨웠지. 그 순간부터 내 마음은 너에게 빼앗겼다. 그 잊지 못할 만남에 지금도 감사하고 있어.\"</i>",
-        "source_fingerprint": "52d4af6cfbc3181dc2627b95f3f1fd830869cd242ee7653238e2e0078fa8f32d",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "4087"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "17672",
-        "key": "1804899255044632",
-        "source_ja": "온천에 몸 담그고 싶어!",
-        "source_fingerprint": "9cab29fe5c2cdff2eff835408bf106203d76981728c6ce5e9754fc6cf5f4d05d",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "17682"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "17678",
-        "key": "1804899255050782",
-        "source_ja": "지금 당장 온천 들어가고 싶어~!",
-        "source_fingerprint": "91535d8ae1ab4e5cc9beb31295e3084d931c35fde2ee24aa6f9a304cbd56df63",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "17688"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "19669",
-        "key": "1814712402202649",
-        "source_ja": "모, 모험...!?\n으음... 난 이제 우리 모험은 끝난 줄 알았는데.\n오늘만큼은 좀 느긋하게 쉬고 싶어...",
-        "source_fingerprint": "beee2e4de287553d2e28c48f9a5d326abf0bfa54cb791fbf8b7d36fc106f52ff",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "19691"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "19671",
-        "key": "1814712404686877",
-        "source_ja": "어...?",
-        "source_fingerprint": "9577bdeea10957382a27f40603089abdd466b92cc2c078b74f18a7c4534adf89",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "19693"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "19673",
-        "key": "1814712404686879",
-        "source_ja": "아... 아아, 모험 말이구나!!! 아, 진작 그렇게 말하지.\n응응, 가자! 자, {c.playername}도.\n꾸물대지 마!!",
-        "source_fingerprint": "b6a41a93b91617b479a0004f1d8fad66bda2461fbccb0ebfdaac7f77fe587fee",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "19695"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "19678",
-        "key": "1814712408118313",
-        "source_ja": "리츠료가 다들 모아서 <i>『휴먼 & 하우스』</i>를 하고 있대.\n완전히 말하는 걸 잊고 있었어! 있지, 다들 기다리고 있으니까 얼른 가자.\n자, 자!!",
-        "source_fingerprint": "758718c98a6a0aa7a69c816a4a6c11452e5d57dcd4f1b3c4b4a04162d8d343e0",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "19700"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "20136",
-        "key": "1809595969222270",
-        "source_ja": "너와 {npc.BestLoverNpc}의 사이라면 어려울 것도 없겠지.\n{npc.BestLoverNpc}이 좋아하는 것 세 가지와 싫어하는 것 세 가지를 가져와 주겠느냐?",
-        "source_fingerprint": "e441805ffbb8523ac2f696c41495ea8824cf3136da657b9f78e6a81e6702dbbe",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "20158"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "20288",
-        "key": "1814629625282665",
-        "source_ja": "바쁜 건 <shiver>너</shiver>뿐이잖아! 난 한가하거든!",
-        "source_fingerprint": "ca71317ad3e95e89969e3f679e0e042d623528259c143340fbf232249e2be7bf",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "20310"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "20296",
-        "key": "1814630351499407",
-        "source_ja": "으으, 진짜 최악이야, {c.playername}!",
-        "source_fingerprint": "dec48c712944d11e5c22dbba9904392fe6b44659a178d340c3a095f189612f93",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "20318"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "20297",
-        "key": "1814630351499408",
-        "source_ja": "나랑 시버트는 밀린 얘기가 산더미라고!\n같이 있을 거면 조용히 있어 줘!",
-        "source_fingerprint": "1822de8d330149484903b4ec9bd8d6fed48807a41632020363bbb3d08b64aa83",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "20319"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "20299",
-        "key": "1814630351499412",
-        "source_ja": "안 돼! {c.playername} 때문에 맨날 내가 끌려다니기만 하잖아!\n나도 한 번쯤은 내 시간을 갖고 싶다고!",
-        "source_fingerprint": "706e67e14f54d279b6f2a9356d267542e3c0258a336ab06fbc77fbe5e49fee18",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "20321"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "20302",
-        "key": "1814630351499416",
-        "source_ja": "우리 둘이서 얘기하게 좀 놔둬 줄래?",
-        "source_fingerprint": "a3993bfd6dd2736470fac79fdd4b3777400c74c1c31e59c7ca7a65f7e2480794",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "20324"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "22497",
-        "key": "1773671128018707",
-        "source_ja": "지금은 이걸로 납득해 줘.",
-        "source_fingerprint": "90d4f128a79d16084a290fc1c69c4723981c13a2ca5c471b48cfee43480cd93c",
-        "drop_reason": "missing_or_changed"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "30346",
-        "key": "1777655339948717",
-        "source_ja": "아아!\n너희는 진짜 여우 일족이었군...!",
-        "source_fingerprint": "a52c66d6f84a6d7ffe36a381efe3f7a48926a9f9a33269fcfd80ce9c15280780",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "30362"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "30349",
-        "key": "1777654154437257",
-        "source_ja": "굴루보 무희는 진실을 말하고 있었는데, 나는 믿지 않았다.\n하지만 지금, 내 눈으로 확인했다!",
-        "source_fingerprint": "a2eada13671c36ce4979ad6ef3a871cf4e1692a6ab62396172c98da439eefe51",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "30365"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "30351",
-        "key": "1777998323519143",
-        "source_ja": "이런! 아직 자기소개를 하지 않았군.\n나는 전설의 굴루보 검객이다.",
-        "source_fingerprint": "3e7c97091fc3ef925be364c66c2cdf2e0bd997ffde51f9f2959905cc789093b1",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "30367"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "30352",
-        "key": "1777998543177385",
-        "source_ja": "나는 숙련된 전사지만...\n너희 도움이 필요하다!",
-        "source_fingerprint": "eec3ad34de4266ab8400a4b449bc512753af2630abd5c66e3931d587abcb8cb1",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "30368"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "30355",
-        "key": "1777654614934163",
-        "source_ja": "타누키가 변신 두루마리를 훔치려 하고 있다!\n더는 막아낼 수 없다...",
-        "source_fingerprint": "c567d3635189f1267f6e445f60114ccf2d80aebcc44d11b0d88f98ee15cf01d1",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "30371"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "30356",
-        "key": "1777654614934164",
-        "source_ja": "놈들을 막으려면\n네 힘이 필요하다!",
-        "source_fingerprint": "89e84a58ace8c12c14451f8baf760fdc692d2b8f8b235e048fa653a21c76b26e",
-        "drop_reason": "key_remap_source_changed",
-        "new_row_id": "30372"
-      }
-    ],
-    "remapped_previous_payload_rows": 17976,
-    "remapped_previous_payload_rows_sample": [
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2551",
-        "key": "1812044610731439",
-        "source_ja": "{c.playername}, 다시 보니 기쁘군. 잘 지냈는가?",
-        "source_fingerprint": "1fc0993232080ad7ff200a5b9a18b0e89f4e2daaaca716784d1d9a4a387d1c56",
-        "new_row_id": "2552"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2552",
-        "key": "1812044610731440",
-        "source_ja": "봄의 세이큐는 내가 지나온 어느 마을보다도 우아하군.\n물론 나는 대부분 실내에 있어야 하지만, 창밖으로 보는 풍경도 꽤 훌륭하네...",
-        "source_fingerprint": "023a9dd8f25f5f253619a776c4db58209401d1076bd35d34cc2900aae6ae2790",
-        "new_row_id": "2553"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2553",
-        "key": "1812044600775085",
-        "source_ja": "그래, 내가 도박에 정신이 팔린 건 사실이지. 그래서 어쨌다는 건가?\n나를 꾸짖을 수 있는 분은 이나리님뿐이네!",
-        "source_fingerprint": "3b8225e96d0c62eeaa0f5c8bd5b1908ffac19f4b10d8fe473c3bfc6761b1ad39",
-        "new_row_id": "2554"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2554",
-        "key": "1812044618966452",
-        "source_ja": "여름 햇살은... 내게 조금 버겁군...",
-        "source_fingerprint": "ea62f4e02ca1e5abefa01d51cbee6a949002449c28ac54fa92917b0a1e96fc77",
-        "new_row_id": "2555"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2555",
-        "key": "1812044618967480",
-        "source_ja": "수요일에는 산신 야마비코님께 인사드리러 가고, 일요일에는 이나리님을 모신 이나리 신사를 찾고 있네.\n신사는 생각을 정리하기에 더없이 좋은 곳이지.",
-        "source_fingerprint": "b0ffd3c4649216594cd1ac3351c00ade5b32d8b0b14148b243b45755a8467e3e",
-        "new_row_id": "2556"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2556",
-        "key": "1812044618967484",
-        "source_ja": "그대가 다가오는 모습을 보면 언제나 마음이 뛰네.",
-        "source_fingerprint": "7dc2ad991fa3e64ec6965ba633be288ef03fd36c9209de33f7ec9ae5e1d7d542",
-        "new_row_id": "2557"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2557",
-        "key": "1812044737187264",
-        "source_ja": "요즘 가족들이 편지를 보내오고 있네. 궁으로 돌아오라더군.\n걱정하지 말게. 아직 이곳에서 끝내지 못한 일이 있다고 전해 두었으니.",
-        "source_fingerprint": "a428eaecaf5d2e4bd57dbe52993ed6159a6e3e4884d04a199d1e353d41dd810d",
-        "new_row_id": "2558"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2558",
-        "key": "1812044737187268",
-        "source_ja": "도박은 하루 걸러 한 번만 하기로 정했네... 지갑이 너무 가벼워지면 곤란하니까.\n아, 월요일은 예외지만. 그건 세지 않네.",
-        "source_fingerprint": "6b4622ce6619a1c075b0a9cfa3f8486f421895f97b72c09e256d8d867a31d86e",
-        "new_row_id": "2559"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2559",
-        "key": "1812044737187272",
-        "source_ja": "조만간 나와 앉아서 카드 한 판 즐겨 주겠나?",
-        "source_fingerprint": "66124a059aea9e278c426a9065e956b9fc28c7c018e8a9c59fe8b18546402b4f",
-        "new_row_id": "2560"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2560",
-        "key": "1812044742482380",
-        "source_ja": "나는 겨울이 좋네.\n흐린 날이 많아져 햇살을 덜 걱정해도 되니까.",
-        "source_fingerprint": "800b0373606c8f6774b6bc9b990cde051b3ef37dee52d68734a6aaa03010a04e",
-        "new_row_id": "2561"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2561",
-        "key": "1812044742483408",
-        "source_ja": "코이와의 목장, 산신의 나무... 가끔은 마을 밖으로 나가고 싶어지거든.",
-        "source_fingerprint": "3fc5870d5b50fae5b039f5e22c01bebaf50a9d8b8cdce237fb45a7d2ff405138",
-        "new_row_id": "2562"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2562",
-        "key": "1812044742484436",
-        "source_ja": "요즘 좋아하던 TV 프로그램들을 다시 보고 있네.\n이 계절엔 그런 위안이 잘 어울리지.",
-        "source_fingerprint": "a371e2602464155064c96078baa8f0786d2b4a1300662812052625cd080c521b",
-        "new_row_id": "2563"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2563",
-        "key": "1812044816486872",
-        "source_ja": "이렇게 이른 아침에 어쩐 일인가? 아직 손님을 맞을 준비가 안 되었는데.\n나중에 내가 찾아가겠네. 괜찮겠지?",
-        "source_fingerprint": "3ba7a4e38133f22fcc861c3351b4c2360621671fc3af0c64802e7ebb28d63b10",
-        "new_row_id": "2564"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2564",
-        "key": "1812044816486876",
-        "source_ja": "좋은 아침이네, {c.playername}.",
-        "source_fingerprint": "d09f512e882b6beaa069ce8edfbfdee934c25868024265937c92610bfdb080c0",
-        "new_row_id": "2565"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2565",
-        "key": "1812044816487904",
-        "source_ja": "솔직히 우와바미는 아침마다 기분이 좋지 않아 곤란하네.\n하루의 시작은 그대와 보내는 편이 훨씬 좋지.",
-        "source_fingerprint": "79c59e59a4ae0263f77cb55fcd74e9084110a3a3054d81c4ffc37970f7469e68",
-        "new_row_id": "2566"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2566",
-        "key": "1812044820444648",
-        "source_ja": "그대가 곧 돌아가지 않는다면, 우와바미에게 내보내 달라고 해야겠군.",
-        "source_fingerprint": "d2dac4d31394992c6271910fc39e2cfd35788c6b465d92df67e6cfe969627dcf",
-        "new_row_id": "2567"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2567",
-        "key": "1812044820444652",
-        "source_ja": "카바바 할멈은 손님을 재우는 데 엄격하지만, 어떻게든 둘러댈 수 있을 걸세.",
-        "source_fingerprint": "97fd6b7f05c7447a1e58233521d604cec44d5fef84fc72aacdcd84d938a976b6",
-        "new_row_id": "2568"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2568",
-        "key": "1812044820444656",
-        "source_ja": "밤이 오면 야성의 피가 들끓네...\n하지만 그대와 조금이라도 함께할 수 있다면, 그 괴로움쯤은 견뎌 보이겠네.",
-        "source_fingerprint": "850d75b068adfc689ef6602f524ea354c440dd18ad537f25347dc439cf846abb",
-        "new_row_id": "2569"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2569",
-        "key": "1812044992752120",
-        "source_ja": "자외선 차단제는 발랐나? 흐린 날에도 햇빛은 피부를 상하게 한다네!",
-        "source_fingerprint": "aca9bf2b783dbc39ff633c4614ea475c09cdc71446edddca02a8616def8fe637",
-        "new_row_id": "2570"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2570",
-        "key": "1812044992753148",
-        "source_ja": "유적에 간다면 우와바미를 데려가는 게 좋겠네.\n그대가 스스로를 지킬 수 있다는 건 알지만...\n괴물 퇴치를 업으로 삼은 자가 함께라면 안심이 되니까!",
-        "source_fingerprint": "13a4f09a187179a62aa9aa46c31696dc9f806365bafb0a66ea683cdd88ddb298",
-        "new_row_id": "2571"
-      }
-    ],
+    "previous_payload_rows": 22461,
+    "dropped_previous_payload_rows": 0,
+    "dropped_previous_payload_rows_sample": [],
+    "remapped_previous_payload_rows": 0,
+    "remapped_previous_payload_rows_sample": [],
     "fingerprint_remapped_previous_payload_rows": 0,
     "fingerprint_remapped_previous_payload_rows_sample": [],
-    "source_text_remapped_previous_payload_rows": 2,
-    "source_text_remapped_previous_payload_rows_sample": [
-      {
-        "textasset": "furniture__put_error_info_text",
-        "schema": "keyed_default",
-        "row_id": "6",
-        "key": "furniture__put_error_info/text_ee69485c29ae38d94689bcf3bb7146e6",
-        "source_ja": "다른 아이템과 겹쳐 놓을 수 없습니다.",
-        "source_fingerprint": "db0a657e216606ba97bef404a1136ec05813c5ae0b23cd41e49ebf7a21cdbf75",
-        "new_row_id": "6",
-        "new_key": "furniture__put_error_info/text_cc848f6747ac3139e077229098e29c13"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "17886",
-        "key": "1805639418751120",
-        "source_ja": "상자를 가져왔어.",
-        "source_fingerprint": "c5254c2702a42872a229d7b2d55797c024a2cef41198346bebe85fb2b13f205d",
-        "new_row_id": "17897",
-        "new_key": "1825724552457926"
-      }
-    ],
+    "source_text_remapped_previous_payload_rows": 0,
+    "source_text_remapped_previous_payload_rows_sample": [],
     "source_update_worksets": [
-      "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Tales of Seikyu\\Tales Of Seikyu_Data\\translation_research\\script_extraction\\codex_probe\\non_dialogue_working_sets\\non_dialogue_source_update_story_book_main_content_352_working_set.tsv"
+      "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Tales of Seikyu\\Tales Of Seikyu_Data\\translation_research\\script_extraction\\codex_probe\\non_dialogue_working_sets\\non_dialogue_source_update_story_book_main_content_352_working_set.tsv",
+      "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Tales of Seikyu\\Tales Of Seikyu_Data\\translation_research\\script_extraction\\codex_probe\\non_dialogue_working_sets\\non_dialogue_source_update_20260705_changed_rows_353_working_set.tsv"
     ],
-    "source_update_rows": 2,
+    "source_update_rows": 29,
     "source_update_remapped_rows": 2,
     "source_update_remapped_rows_sample": [
       {
@@ -437,8 +36,8 @@
         "new_key": "story_book__main/content_i18n_a23a98115865ba25c84ce295b4be397e"
       }
     ],
-    "source_update_added_rows": 2,
-    "source_update_replaced_rows": 0,
+    "source_update_added_rows": 26,
+    "source_update_replaced_rows": 3,
     "source_diff_from_previous_build": {
       "previous_source_sha256": "eefb061b2955614b0ecd49b486b3252f72123e129f44dde44d7beb394055ee1f",
       "current_source_sha256": "6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44",
@@ -655,13 +254,14 @@
   "excel_bundle": {
     "glob": "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_*.bundle",
     "source_sha256": "6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44",
-    "target_sha256": "e96a3f92bd30f3ad265b40f601b3eca87794b9c65ba3b3e496a89c8b0f9e0f1a",
+    "target_sha256": "8d1a44e05d299aa5a4300db0aa4219847fff1068640b13840af9fd794dd14c59",
     "accepted_patched_sha256": [
       "196ad86bbbb018fb10357c00364f83fcba735a0541345195be1956a2c17eb593",
       "2b5dae9bfe4b2c0e9a5161808bf446c3cac7b1c93887f31f1be74fbbd0c1f1cb",
       "38da7ee0505f55d84abc1332e9f41a5c023dfca771b286f9b875a8ee07d80ec9",
       "5defc6d90de95fbfa8e691f3f9136f4bd5c9d6d9571613ba7f2e869c29d21453",
       "6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f",
+      "8d1a44e05d299aa5a4300db0aa4219847fff1068640b13840af9fd794dd14c59",
       "c6607bdea4519e5cc516b920ab520c90ab6ad0566f2ac0fcdb5ee3813ba03711",
       "d6076bf4927f4862743b615692802fdc78be8f3c0bd65acc6351cefa002d86fc",
       "e96a3f92bd30f3ad265b40f601b3eca87794b9c65ba3b3e496a89c8b0f9e0f1a"
@@ -180360,6 +179960,214 @@
         "key": "story_book__main/content_i18n_a23a98115865ba25c84ce295b4be397e",
         "source_ja": "나마즈는 결국 그녀를 풀어 주었지만 두 가지 조건을 걸었다. 매몰된 바다로 가는 길을 절대 바깥에 밝히지 말 것, 그리고 앞으로 2년 동안 매주 먹을 것을 가져올 것. 다른 선택지가 없던 쿠즈노하는 그 약속을 받아들였다.\n\n아버지가 차츰 회복되자 쿠즈노하는 약속을 지켰다. 매주 자기 밭에서 거둔 작물을 가져와 거대한 메기에게 정성껏 바쳤다. 2년의 시간이 흐르는 동안 둘은 함께한 세월 속에서 깊은 정을 쌓았다. 이별의 때가 다가오자, 아쉬움이 컸던 나마즈는 쿠즈노하에게 동굴이 다시 막히더라도 열 수 있는 방법을 알려 주었다. 언젠가 다시 찾아와 주기를 바라면서. 그리고 쿠즈노하는 실제로 그렇게 했다... 죽는 날까지, 매주 빠짐없이.",
         "source_fingerprint": "cdc21b2fb980e424708636048cc277519f6d0f3ffa3bd97f087a32713666624f"
+      },
+      {
+        "textasset": "i18n_alone_avg_default",
+        "schema": "avg",
+        "row_id": "4087",
+        "key": "1808421512566280",
+        "source_ja": "<i>\"{c.playername}, 우리가 처음 만난 곳을 기억하나? 고양이 모습으로 낮잠을 자던 나를 네가 깨웠지. 그 순간부터 내 마음은 너에게 빼앗겼다. 그 잊지 못할 만남에 지금도 감사하고 있어.\"</i>",
+        "source_fingerprint": "b81a5f2bd2f5000a64141a164e242d456c32f23fe2b536c9eafce1993844fda7"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "17682",
+        "key": "1804899255044632",
+        "source_ja": "무슨 일이야?",
+        "source_fingerprint": "c904d86e6154aa38d967d96a4f4f27324f66db34400488a23308fbb797da497b"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "17688",
+        "key": "1804899255050782",
+        "source_ja": "{c.playername}! {c.playername}!",
+        "source_fingerprint": "2d65eabdd20f1a4c23b7a754c49231649adf1142c7f8512798207d951c6aab3b"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "19691",
+        "key": "1814712402202649",
+        "source_ja": "모, 모험...!?\n으음... 난 이제 우리 모험은 끝난 줄 알았는데.\n오늘만큼은 좀 느긋하게 쉬고 싶어...",
+        "source_fingerprint": "b6947067cac6a497fe831f7fbad358919dd3f16dda42a44a9438116d5e3822cf"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "19693",
+        "key": "1814712404686877",
+        "source_ja": "어...?",
+        "source_fingerprint": "ae0958ced87497ff3b75334f2acefd67daadb5d85bb666621f7d9fd47d7768f5"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "19695",
+        "key": "1814712404686879",
+        "source_ja": "아... 아아, 모험 말이구나!!! 아, 진작 그렇게 말하지.\n응응, 가자! 자, {c.playername}도.\n꾸물대지 마!!",
+        "source_fingerprint": "0cb8e01bdc8a2873016e1c4f275a8d770765bc895f15ed624b92f667f99e0f76"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "19700",
+        "key": "1814712408118313",
+        "source_ja": "리츠료가 다들 모아서 <i>『휴먼 & 하우스』</i>를 하고 있대.\n완전히 말하는 걸 잊고 있었어! 있지, 다들 기다리고 있으니까 얼른 가자.\n자, 자!!",
+        "source_fingerprint": "a573183d1f668aa019173ed432cc5cb6c34070991c724b4862a3bd851f9ff9b2"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "20158",
+        "key": "1809595969222270",
+        "source_ja": "너와 {npc.BestLoverNpc}의 사이라면 어려울 것도 없겠지.\n{npc.BestLoverNpc}이 좋아하는 것 세 가지와 싫어하는 것 세 가지를 가져와 주겠느냐?",
+        "source_fingerprint": "5301eb1e0b6a15e6b2fcbdc4c414cdb1aac6bdcc19d8ca000dbc591941f6a0f9"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "20310",
+        "key": "1814629625282665",
+        "source_ja": "바쁜 건 <shiver>너</shiver>뿐이잖아! 난 한가하거든!",
+        "source_fingerprint": "a0e46530df76e5179a0347fd35c12ccabdd4d2376f86cc2065ffb5acc6ca1eba"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "20318",
+        "key": "1814630351499407",
+        "source_ja": "으으, 진짜 최악이야, {c.playername}!",
+        "source_fingerprint": "0c85ca3d607ea840f3d410e39d5e2a15ac721c90257bb420bf22633580fac8cd"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "20319",
+        "key": "1814630351499408",
+        "source_ja": "나랑 시버트는 밀린 얘기가 산더미라고!\n같이 있을 거면 조용히 있어 줘!",
+        "source_fingerprint": "947457af62049094c144fc87b9db3fc83926bded549a6f4a83516845a5e6ecce"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "20321",
+        "key": "1814630351499412",
+        "source_ja": "안 돼! {c.playername} 때문에 맨날 내가 끌려다니기만 하잖아!\n나도 한 번쯤은 내 시간을 갖고 싶다고!",
+        "source_fingerprint": "ed310f685109d03e251e23feac7ed6c17d183f6d47e0a74d45f635bd527c509e"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "20324",
+        "key": "1814630351499416",
+        "source_ja": "우리 둘이서 얘기하게 좀 놔둬 줄래?",
+        "source_fingerprint": "3c90072f7b782db023dd58e10e369c9354973e572b08ace8b14dfae8acd969ed"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30362",
+        "key": "1777655339948717",
+        "source_ja": "아아!\n너희는 진짜 여우 일족이었군...!",
+        "source_fingerprint": "92791424a9838781be7d016426f1b77b3afb5855a4539bf37d615d14b3d0d9a9"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30365",
+        "key": "1777654154437257",
+        "source_ja": "굴루보 무희는 진실을 말하고 있었는데, 나는 믿지 않았다.\n하지만 지금, 내 눈으로 확인했다!",
+        "source_fingerprint": "82a2aa81b77e177b34ff9bd1885b3506fe750f5c51080f4f2260d801d018027f"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30367",
+        "key": "1777998323519143",
+        "source_ja": "이런! 아직 자기소개를 하지 않았군.\n나는 전설의 굴루보 검객이다.",
+        "source_fingerprint": "117560f40d73b82da143761acee5a5032edbfcc982fb087d620c1c004cefe0bc"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30368",
+        "key": "1777998543177385",
+        "source_ja": "나는 숙련된 전사지만...\n너희 도움이 필요하다!",
+        "source_fingerprint": "af972f2ba93d4fa5fdd234f38b84326cfd751fc0bdb49d52a9a2fc1c8a9f99fe"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30371",
+        "key": "1777654614934163",
+        "source_ja": "타누키가 변신 두루마리를 훔치려 하고 있다!\n더는 막아낼 수 없다...",
+        "source_fingerprint": "3d9bf9e79595d562f9aa418db00559ba61a4c0dd676a4ec516f3e33c8d4b9746"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30372",
+        "key": "1777654614934164",
+        "source_ja": "놈들을 막으려면\n네 힘이 필요하다!",
+        "source_fingerprint": "4cb939c68d20c39eed0222260ef45cc2056b7d7fda14debb2ec2241e019b7f4b"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30377",
+        "key": "1777654895919778",
+        "source_ja": "가슴이 뛰는군!",
+        "source_fingerprint": "3fda8cb3e7730c871d00d4378f005c3cdb720b9dbdb2fc74b1733a0f643e2e79"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30375",
+        "key": "1777654885191326",
+        "source_ja": "너희를 단련시켜 주겠다!\n제대로 준비되도록\n이끌어 주마!",
+        "source_fingerprint": "dda7778b4d411e3e0efd7e7edecdc44960889493654bb8f4164717c47044ec9c"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30376",
+        "key": "1777654885191327",
+        "source_ja": "집중을 끊지 마라!\n빠르고 강하게 공격하고, 적의 공격은 피해라.\n전투는 춤과도 같다... 리듬을 찾아라!",
+        "source_fingerprint": "f4401eec1161737a3e59f7d75597d7d0f287904fa6b1ccb1aa348fb8652fc34c"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30378",
+        "key": "1777655006407334",
+        "source_ja": "이걸 가져가라.\n이 갑옷이 너를 지켜 주고\n더 강하게 해 줄 것이다!",
+        "source_fingerprint": "d912b0a8fe87f1f711db240f46c4edbeb9048b5d795edadae5b65ea59ee889fa"
+      },
+      {
+        "textasset": "i18n_avg_default",
+        "schema": "avg",
+        "row_id": "30379",
+        "key": "1777655113202347",
+        "source_ja": "타누키는 바로 근처에 있다...\n이 앞의 방에 있지.\n가라, 운명을 이루어라! 여우 일족의 구원자여!",
+        "source_fingerprint": "11d3f0a2f54bc0757a39e1571895f43ea7391bd8a267953ceb3d6d807d397f6e"
+      },
+      {
+        "textasset": "i18n_quest_related",
+        "schema": "keyed_custom",
+        "row_id": "1044",
+        "key": "Objective_BringPreference",
+        "source_ja": "{0}이 가장 좋아하는 물건 {1}개와 가장 싫어하는 물건 {2}개를 {3}에 가져가기",
+        "source_fingerprint": "71871083a765ff3dfafe343c9717067fe205941b1029fdd61f06a2946036c18a"
+      },
+      {
+        "textasset": "story_book__main_content_i18n",
+        "schema": "keyed_default",
+        "row_id": "41",
+        "key": "story_book__main/content_i18n_ce0f35a51f14a082b33fcc957bba36c7",
+        "source_ja": "우미보즈는 온갖 물고기를 먹는 것을 좋아하며, 불운하게도 그의 길을 지나가는 물고기 떼라면 통째로 배불리 먹어 치운다. 선원들은 오래전부터 긴 항해를 준비하며 바다의 신에게 생선이나 훈제 생선을 제물로 바쳤다. 우미마모리, 즉 진짜 물고기 비늘이나 금덩이까지 안에 봉한 도자기 물고기 부적도 때로는 몸에 지니곤 했다. 배 밖으로 던질 때는 부적의 끈을 풀어 바다에 바치면, 잔잔한 물결과 빠른 구조를 얻을 수 있다고 믿었다.\n\n우미보즈는 또한 물속에서 수 킬로미터를 이동하는 낮은 주파수의 소리를 낼 수 있다. 때로는 웅웅거림으로 오해되지만, 우미보즈의 주파수는 사실 우아하고 길게 이어지는 선율을 이룬다. 선원들은 이 노래를 \"우미의 탄식\"이라고 부른다. 무엇을 전하려는지는 아무도 모르지만, 거의 초저주파에 가까운 그 애달픈 울림은 무시하기 어렵다. 미신에 따르면 우미보즈의 노래가 들리는 \"탄식의 밤\"에는 바다에서 멀리 떨어져야 한다.",
+        "source_fingerprint": "0d1c56576c9d9f4a73667797d9e0bfe59d88e17d714308e1199f0471ce9ac60b"
       }
     ]
   },
