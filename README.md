@@ -190,9 +190,12 @@ python tools\test_excel_ui_font_patch.py
 python tools\test_repair_text_only_excel.py
 python tools\run_temp_baseline_test.py
 python tools\build_release.py
+python tools\build_blog_notice.py --zip-sha256 "<release_zip_sha256>"
 python tools\run_exe_temp_test.py
 python tools\scan_release_assets.py
 ```
+
+블로그 공지 초안 생성/게시 절차는 [docs/blog_update_process.md](docs/blog_update_process.md)를 참고하세요.
 
 소스 실행:
 
