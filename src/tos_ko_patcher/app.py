@@ -26,6 +26,7 @@ from tos_ko_patcher.core import (
     export_patch_files,
     install_patch,
     launch_game,
+    normalize_game_data,
     restore_patch,
     verify_patch,
     write_diagnostic_report,
@@ -69,6 +70,29 @@ def user_facing_error_message(message: str) -> str:
     if any(marker in message for marker in PATH_ERROR_MARKERS):
         return f"{PATH_ERROR_NOTICE}\n\n상세 오류: {message}"
     return message
+
+
+def verify_error_status(message: str, path_valid: bool) -> dict[str, str]:
+    if not path_valid:
+        return {
+            "path": "경로 확인 실패",
+            "patch": "확인 불가",
+            "font": "확인 불가",
+            "progress": "게임 폴더를 다시 선택하거나 Steam 파일 상태를 확인해 주세요.",
+        }
+    if is_game_update_error(message):
+        return {
+            "path": "경로 확인됨",
+            "patch": "게임 업데이트 확인 필요",
+            "font": "확인 불가",
+            "progress": "게임 경로는 정상입니다. 최신 패처를 확인해 주세요.",
+        }
+    return {
+        "path": "경로 확인됨",
+        "patch": "게임 파일 확인 필요",
+        "font": "확인 불가",
+        "progress": "게임 경로는 정상입니다. 자세한 원인은 아래 작업 로그를 확인해 주세요.",
+    }
 
 
 class PatcherGui:
@@ -433,10 +457,16 @@ class PatcherGui:
 
     def _handle_error(self, action: str, message: str, notify: bool) -> None:
         if action == "verify":
-            self.path_status_var.set("경로 확인 실패")
-            self.patch_status_var.set("확인 불가")
-            self.font_status_var.set("확인 불가")
-            self.progress_var.set("게임 폴더를 다시 선택하거나 Steam 파일 상태를 확인해 주세요.")
+            try:
+                normalize_game_data(self._path())
+                path_valid = True
+            except PatchError:
+                path_valid = False
+            status = verify_error_status(message, path_valid)
+            self.path_status_var.set(status["path"])
+            self.patch_status_var.set(status["patch"])
+            self.font_status_var.set(status["font"])
+            self.progress_var.set(status["progress"])
         elif action == "check_update":
             self.update_status_var.set("릴리스 확인 실패")
             self.progress_var.set("네트워크 연결 또는 GitHub 접속 상태를 확인해 주세요.")

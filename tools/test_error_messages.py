@@ -7,7 +7,13 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
-from tos_ko_patcher.app import GAME_UPDATED_NOTICE, PATH_ERROR_NOTICE, is_game_update_error, user_facing_error_message  # noqa: E402
+from tos_ko_patcher.app import (  # noqa: E402
+    GAME_UPDATED_NOTICE,
+    PATH_ERROR_NOTICE,
+    is_game_update_error,
+    user_facing_error_message,
+    verify_error_status,
+)
 
 
 def main() -> int:
@@ -24,12 +30,20 @@ def main() -> int:
         "update_messages": [user_facing_error_message(item) for item in update_errors],
         "path_message": user_facing_error_message(path_error),
         "passthrough": user_facing_error_message(passthrough),
+        "valid_path_update_status": verify_error_status(update_errors[0], path_valid=True),
+        "valid_path_file_status": verify_error_status("Unity bundle parse failed", path_valid=True),
+        "invalid_path_status": verify_error_status(path_error, path_valid=False),
     }
     ok = (
         all(checks["update_errors_detected"])
         and all(item == GAME_UPDATED_NOTICE for item in checks["update_messages"])
         and checks["path_message"].startswith(PATH_ERROR_NOTICE)
         and checks["passthrough"] == passthrough
+        and checks["valid_path_update_status"]["path"] == "경로 확인됨"
+        and checks["valid_path_update_status"]["patch"] == "게임 업데이트 확인 필요"
+        and checks["valid_path_file_status"]["path"] == "경로 확인됨"
+        and checks["valid_path_file_status"]["patch"] == "게임 파일 확인 필요"
+        and checks["invalid_path_status"]["path"] == "경로 확인 실패"
     )
     print(json.dumps({"status": "pass" if ok else "fail", **checks}, ensure_ascii=False))
     return 0 if ok else 1
