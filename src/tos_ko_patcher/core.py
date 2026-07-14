@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.12-playtest.20260705"
+PATCH_VERSION = "0.1.13-playtest.20260715"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -540,16 +540,30 @@ def default_game_data() -> Path:
     return discover_steam_game_data() or DEFAULT_STEAM_DATA
 
 
+def catalog_referenced_bundles(game_data: Path, candidates: list[Path]) -> list[Path]:
+    catalog = game_data / "StreamingAssets/aa/catalog.bin"
+    if not catalog.is_file():
+        return []
+    try:
+        catalog_bytes = catalog.read_bytes()
+    except OSError:
+        return []
+    return [candidate for candidate in candidates if candidate.name.encode("utf-8") in catalog_bytes]
+
+
 def find_single_bundle(game_data: Path, pattern: str, expected_hashes: set[str]) -> Path:
     matches = sorted(game_data.glob(pattern))
     if not matches:
         raise PatchError(f"대상 번들을 찾을 수 없습니다: {pattern}")
+    if len(matches) == 1:
+        return matches[0]
+    catalog_matches = catalog_referenced_bundles(game_data, matches)
+    if len(catalog_matches) == 1:
+        return catalog_matches[0]
     hashed: list[tuple[Path, str]] = [(path, sha256_file(path)) for path in matches]
     for path, digest in hashed:
         if digest in expected_hashes:
             return path
-    if len(matches) == 1:
-        return matches[0]
     details = "\n".join(f"- {path.name}: {digest}" for path, digest in hashed)
     raise PatchError(f"지원되는 해시의 번들을 찾지 못했습니다.\n{details}")
 
