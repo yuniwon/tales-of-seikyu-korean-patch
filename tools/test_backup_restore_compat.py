@@ -8,11 +8,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
-EXCEL_BUNDLE_NAME = "configs_assets_excel_d3c3ead9e721d2fd47b223b9c32e462d.bundle"
+EXCEL_BUNDLE_NAME = "configs_assets_excel_ba168df030e983b8d9fa4c3200c3b5bc.bundle"
 EXCEL_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / EXCEL_BUNDLE_NAME
 BAG_CURRENT = next((SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64").glob("uiview_assets_bagfunctionitem_*.bundle"))
 BAG_BUNDLE_NAME = BAG_CURRENT.name
-EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.10-playtest.20260702/excel.6482ecc747ec57e0.bak"
+EXCEL_SOURCE = EXCEL_CURRENT
 BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
 sys.path.insert(0, str(REPO / "src"))
 

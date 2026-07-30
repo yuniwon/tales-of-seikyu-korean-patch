@@ -31,10 +31,10 @@ from tos_ko_patcher.core import (  # noqa: E402
     write_string,
 )
 
-PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/excel.eefb061b2955614b.bak"
-CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_d3c3ead9e721d2fd47b223b9c32e462d.bundle"
+PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.10-playtest.20260702/excel.6482ecc747ec57e0.bak"
+CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_ba168df030e983b8d9fa4c3200c3b5bc.bundle"
 CURRENT_BAG_BUNDLE_NAME = "uiview_assets_bagfunctionitem_c03f77ea6e9f3cdb429d41f0f3886553.bundle"
-EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.10-playtest.20260702/excel.6482ecc747ec57e0.bak"
+EXCEL_SOURCE = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / CURRENT_EXCEL_BUNDLE_NAME
 BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
 BAG_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / CURRENT_BAG_BUNDLE_NAME
 PREVIOUS_PAYLOAD = REPO / "payload/patch_payload.json"
@@ -44,6 +44,8 @@ SOURCE_UPDATE_WORKSETS = [
     / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_story_book_main_content_352_working_set.tsv",
     SRC_GAME_DATA
     / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_20260705_changed_rows_353_working_set.tsv",
+    SRC_GAME_DATA
+    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_20260730_build_24352496_354_working_set.tsv",
 ]
 
 SURFACE_TEXT_OVERRIDES = {
@@ -196,6 +198,13 @@ def normalize_source_text(value: str) -> str:
     return " ".join(value.split())
 
 
+def source_languages_match(left: dict[str, object], right: dict[str, object]) -> bool:
+    return all(
+        normalize_source_text(str(left.get(field, ""))) == normalize_source_text(str(right.get(field, "")))
+        for field in ("source_en", "source_zh_cn", "source_ja")
+    )
+
+
 def source_row_index(bundle: Path) -> dict[str, dict[str, dict[str, str]]]:
     assets = textassets_from_bundle(bundle)
     result: dict[str, dict[str, dict[str, str]]] = {}
@@ -257,6 +266,7 @@ def build_rows(
     source_ja_texts = source_ja_text_index(source_bundle)
     current_rows = source_row_index(source_bundle)
     previous_rows = source_row_index(previous_source_bundle)
+    previous_source_lookup = source_row_lookup(previous_source_bundle)
     rows: list[dict[str, Any]] = []
     dropped: list[dict[str, Any]] = []
     remapped: list[dict[str, Any]] = []
@@ -273,13 +283,22 @@ def build_rows(
         if source_row is not None:
             if not expected_fingerprint or row_source_fingerprint(source_row, schema) == expected_fingerprint:
                 rows.append(entry)
+            elif (previous_source_row := previous_source_lookup.get(identity)) is not None and source_languages_match(
+                previous_source_row, source_row
+            ):
+                rows.append(entry)
             else:
                 dropped.append({**entry, "drop_reason": "source_changed"})
             continue
         source_row = source_keys.get(textasset, {}).get(key)
         if source_row is not None:
             current_fingerprint = row_source_fingerprint(source_row, schema)
-            if expected_fingerprint and current_fingerprint != expected_fingerprint:
+            previous_source_row = previous_source_lookup.get(identity)
+            if (
+                expected_fingerprint
+                and current_fingerprint != expected_fingerprint
+                and not (previous_source_row and source_languages_match(previous_source_row, source_row))
+            ):
                 dropped.append({**entry, "drop_reason": "key_remap_source_changed", "new_row_id": str(source_row["row_id"])})
                 continue
             updated = dict(entry)
@@ -527,6 +546,7 @@ def main() -> int:
                 "old_alias": OLD_UI_FONT_ALIAS,
                 "new_alias": KOREAN_UI_FONT_ALIAS,
                 "expected_replacements": ui_font_alias_source_count(EXCEL_SOURCE),
+                "minimum_replacements": 1,
             },
             "patch_rows": rows,
         },

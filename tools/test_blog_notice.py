@@ -16,14 +16,14 @@ def main() -> int:
     notice = build_notice(payload, release_notes, zip_sha256=ZIP_SHA256)
 
     checks = {
-        "title_has_public_version": "v0.1.14 배포" in notice.title,
+        "title_has_public_version": "v0.1.15 배포" in notice.title,
         "title_hides_internal_version": "playtest" not in notice.title,
-        "metadata_has_full_version": notice.metadata["version"] == "0.1.14-playtest.20260715",
-        "body_has_zip": "TalesOfSeikyuKoreanPatch-v0.1.14-playtest.20260715.zip" in notice.body,
+        "metadata_has_full_version": notice.metadata["version"] == "0.1.15-playtest.20260730",
+        "body_has_zip": "TalesOfSeikyuKoreanPatch-v0.1.15-playtest.20260730.zip" in notice.body,
         "body_has_sha": ZIP_SHA256 in notice.body,
-        "body_has_row_count": "22,487행" in notice.body,
-        "body_has_buildid": "24036018" in notice.body,
-        "metadata_patch_rows": notice.metadata["patch_rows"] == 22487,
+        "body_has_row_count": "22,526행" in notice.body,
+        "body_has_buildid": "24352496" in notice.body,
+        "metadata_patch_rows": notice.metadata["patch_rows"] == 22526,
         "metadata_edit_url": notice.metadata["blog_edit_url"].endswith("/postupdate?logNo=224322599998"),
     }
     with tempfile.TemporaryDirectory(prefix="tos-ko-blog-notice-test-") as temp:

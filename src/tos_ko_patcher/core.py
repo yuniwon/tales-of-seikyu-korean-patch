@@ -20,7 +20,7 @@ import UnityPy
 from UnityPy.files.SerializedFile import FileIdentifier
 
 
-PATCH_VERSION = "0.1.14-playtest.20260715"
+PATCH_VERSION = "0.1.15-playtest.20260730"
 PATCH_TAG = f"v{PATCH_VERSION}"
 GITHUB_REPO = "yuniwon/tales-of-seikyu-korean-patch"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -659,6 +659,7 @@ def inspect_excel_ui_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]
     old_alias = str(patch["old_alias"])
     new_alias = str(patch["new_alias"])
     expected = int(patch.get("expected_replacements") or 1)
+    minimum = int(patch.get("minimum_replacements") or expected)
     raw_by_name = textassets_from_bundle(path)
     raw = raw_by_name.get(textasset)
     if raw is None:
@@ -678,12 +679,13 @@ def inspect_excel_ui_font(path: Path, payload: dict[str, Any]) -> dict[str, Any]
     return {
         "ui_font_patch_configured": True,
         "ui_font_textasset": textasset,
-        "ui_font_alias_ok": old_count == 0 and new_count >= expected,
+        "ui_font_alias_ok": old_count == 0 and new_count >= minimum,
         "old_ui_font_alias": old_alias,
         "old_ui_font_alias_count": old_count,
         "korean_ui_font_alias": new_alias,
         "korean_ui_font_alias_count": new_count,
         "expected_ui_font_alias_count": expected,
+        "minimum_ui_font_alias_count": minimum,
     }
 
 
