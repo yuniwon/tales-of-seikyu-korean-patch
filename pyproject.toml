@@ -1,6 +1,6 @@
 [project]
 name = "tales-of-seikyu-korean-patch"
-version = "0.1.15"
+version = "0.1.16"
 description = "Unofficial Korean patcher for Tales of Seikyu"
 requires-python = ">=3.11"
 dependencies = [

@@ -32,7 +32,7 @@ from tos_ko_patcher.core import (  # noqa: E402
 )
 
 PREVIOUS_EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/backups/0.1.10-playtest.20260702/excel.6482ecc747ec57e0.bak"
-CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_ba168df030e983b8d9fa4c3200c3b5bc.bundle"
+CURRENT_EXCEL_BUNDLE_NAME = "configs_assets_excel_3f1047082220cc86ef33c60c74bf4ded.bundle"
 CURRENT_BAG_BUNDLE_NAME = "uiview_assets_bagfunctionitem_c03f77ea6e9f3cdb429d41f0f3886553.bundle"
 EXCEL_SOURCE = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / CURRENT_EXCEL_BUNDLE_NAME
 BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
@@ -41,11 +41,7 @@ PREVIOUS_PAYLOAD = REPO / "payload/patch_payload.json"
 STEAM_MANIFEST = SRC_GAME_DATA.parents[2] / "appmanifest_2340520.acf"
 SOURCE_UPDATE_WORKSETS = [
     SRC_GAME_DATA
-    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_story_book_main_content_352_working_set.tsv",
-    SRC_GAME_DATA
-    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_20260705_changed_rows_353_working_set.tsv",
-    SRC_GAME_DATA
-    / "translation_research/script_extraction/codex_probe/non_dialogue_working_sets/non_dialogue_source_update_20260730_build_24352496_354_working_set.tsv",
+    / "translation_research/script_extraction/codex_probe/dialogue_working_sets/source_update_20260825_build_24728299_Nine_Lives_355_dialogue_working_set.tsv",
 ]
 
 SURFACE_TEXT_OVERRIDES = {
