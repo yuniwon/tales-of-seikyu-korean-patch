@@ -1,250 +1,30 @@
 {
-  "patch_version": "0.1.16-playtest.20260825",
+  "patch_version": "0.1.17-playtest.20261015",
   "game": "Tales of Seikyu",
   "language": "ko",
   "supported_platform": "Steam Windows",
   "generated_from": {
-    "steam_buildid": "24728299",
-    "excel_source_sha256": "5bd39f8df5faa5e29bbf16e6bffd181f22ad1792cc858be4fcd852428f9c8721",
+    "steam_buildid": "24948693",
+    "excel_source_sha256": "5ab59347431bcbc7d54ad1d178c1fcbaefe3e1e1060930e5746836b355cab6e8",
     "previous_excel_source_sha256": "6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44",
-    "previous_payload_rows": 22526,
-    "dropped_previous_payload_rows": 4,
-    "dropped_previous_payload_rows_sample": [
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "23351",
-        "key": "1805827437877175",
-        "source_ja": "전에, 내가 행상인 무리에게 팔려 갔다고 말했었지.\n긴 머리의 인간 모습이 될 수 있는 요괴는 비싸게 팔린다나 봐...\n우리 가족도 그 돈에 눈이 멀었던 것 같아.",
-        "source_fingerprint": "302875d1b817941603d2986e504d6020efb3bf2ab55225cf44c9def4b3f136b7",
-        "drop_reason": "source_changed"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "23352",
-        "key": "1805827437877176",
-        "source_ja": "나는 어두운 우리 안에 갇힌 채 마을에서 마을로 끌려다녔어.\n운이 나쁜 날엔 행상인에게 돈을 낸 손님들을 상대해야 했고...",
-        "source_fingerprint": "5928bed2b03b07e2928edfe861003aeb0d447b81d461e772c9939ee386cd9fe3",
-        "drop_reason": "source_changed"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "22802",
-        "key": "1810295526189757",
-        "source_ja": "미안하지만, {c.playername}. 타누키는 다른 이와 함께 목욕하지 않는다. 우리에게 목욕은 사적이고 신성한 의식이거든. 그러니 타누키에게 온천 데이트를 신청하지 않는 게 좋을 거다.",
-        "source_fingerprint": "be3ad434b77c2782aca86be71bf117627a76d20e815a2800d26ac780794829ee",
-        "drop_reason": "source_changed"
-      },
-      {
-        "textasset": "i18n_avg_default",
-        "schema": "avg",
-        "row_id": "27095",
-        "key": "1813236111430152",
-        "source_ja": "나도 절대 네 기대를 저버리지 않을게.",
-        "source_fingerprint": "85aef904a06edbc74167e74fae15291865649753854923bfc555813462b3d9f6",
-        "drop_reason": "source_changed"
-      }
-    ],
-    "remapped_previous_payload_rows": 2548,
-    "remapped_previous_payload_rows_sample": [
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2560",
-        "key": "1812044610731439",
-        "source_ja": "{c.playername}, 다시 보니 기쁘군. 잘 지냈는가?",
-        "source_fingerprint": "1fc0993232080ad7ff200a5b9a18b0e89f4e2daaaca716784d1d9a4a387d1c56",
-        "new_row_id": "2570"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2561",
-        "key": "1812044610731440",
-        "source_ja": "봄의 세이큐는 내가 지나온 어느 마을보다도 우아하군.\n물론 나는 대부분 실내에 있어야 하지만, 창밖으로 보는 풍경도 꽤 훌륭하네...",
-        "source_fingerprint": "023a9dd8f25f5f253619a776c4db58209401d1076bd35d34cc2900aae6ae2790",
-        "new_row_id": "2571"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2562",
-        "key": "1812044600775085",
-        "source_ja": "그래, 내가 도박에 정신이 팔린 건 사실이지. 그래서 어쨌다는 건가?\n나를 꾸짖을 수 있는 분은 이나리님뿐이네!",
-        "source_fingerprint": "3b8225e96d0c62eeaa0f5c8bd5b1908ffac19f4b10d8fe473c3bfc6761b1ad39",
-        "new_row_id": "2572"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2563",
-        "key": "1812044618966452",
-        "source_ja": "여름 햇살은... 내게 조금 버겁군...",
-        "source_fingerprint": "ea62f4e02ca1e5abefa01d51cbee6a949002449c28ac54fa92917b0a1e96fc77",
-        "new_row_id": "2573"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2564",
-        "key": "1812044618967480",
-        "source_ja": "수요일에는 산신 야마비코님께 인사드리러 가고, 일요일에는 이나리님을 모신 이나리 신사를 찾고 있네.\n신사는 생각을 정리하기에 더없이 좋은 곳이지.",
-        "source_fingerprint": "b0ffd3c4649216594cd1ac3351c00ade5b32d8b0b14148b243b45755a8467e3e",
-        "new_row_id": "2574"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2565",
-        "key": "1812044618967484",
-        "source_ja": "그대가 다가오는 모습을 보면 언제나 마음이 뛰네.",
-        "source_fingerprint": "7dc2ad991fa3e64ec6965ba633be288ef03fd36c9209de33f7ec9ae5e1d7d542",
-        "new_row_id": "2575"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2566",
-        "key": "1812044737187264",
-        "source_ja": "요즘 가족들이 편지를 보내오고 있네. 궁으로 돌아오라더군.\n걱정하지 말게. 아직 이곳에서 끝내지 못한 일이 있다고 전해 두었으니.",
-        "source_fingerprint": "a428eaecaf5d2e4bd57dbe52993ed6159a6e3e4884d04a199d1e353d41dd810d",
-        "new_row_id": "2576"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2567",
-        "key": "1812044737187268",
-        "source_ja": "도박은 하루 걸러 한 번만 하기로 정했네... 지갑이 너무 가벼워지면 곤란하니까.\n아, 월요일은 예외지만. 그건 세지 않네.",
-        "source_fingerprint": "6b4622ce6619a1c075b0a9cfa3f8486f421895f97b72c09e256d8d867a31d86e",
-        "new_row_id": "2577"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2568",
-        "key": "1812044737187272",
-        "source_ja": "조만간 나와 앉아서 카드 한 판 즐겨 주겠나?",
-        "source_fingerprint": "66124a059aea9e278c426a9065e956b9fc28c7c018e8a9c59fe8b18546402b4f",
-        "new_row_id": "2578"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2569",
-        "key": "1812044742482380",
-        "source_ja": "나는 겨울이 좋네.\n흐린 날이 많아져 햇살을 덜 걱정해도 되니까.",
-        "source_fingerprint": "800b0373606c8f6774b6bc9b990cde051b3ef37dee52d68734a6aaa03010a04e",
-        "new_row_id": "2579"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2570",
-        "key": "1812044742483408",
-        "source_ja": "코이와의 목장, 산신의 나무... 가끔은 마을 밖으로 나가고 싶어지거든.",
-        "source_fingerprint": "3fc5870d5b50fae5b039f5e22c01bebaf50a9d8b8cdce237fb45a7d2ff405138",
-        "new_row_id": "2580"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2571",
-        "key": "1812044742484436",
-        "source_ja": "요즘 좋아하던 TV 프로그램들을 다시 보고 있네.\n이 계절엔 그런 위안이 잘 어울리지.",
-        "source_fingerprint": "a371e2602464155064c96078baa8f0786d2b4a1300662812052625cd080c521b",
-        "new_row_id": "2581"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2572",
-        "key": "1812044816486872",
-        "source_ja": "이렇게 이른 아침에 어쩐 일인가? 아직 손님을 맞을 준비가 안 되었는데.\n나중에 내가 찾아가겠네. 괜찮겠지?",
-        "source_fingerprint": "3ba7a4e38133f22fcc861c3351b4c2360621671fc3af0c64802e7ebb28d63b10",
-        "new_row_id": "2582"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2573",
-        "key": "1812044816486876",
-        "source_ja": "좋은 아침이네, {c.playername}.",
-        "source_fingerprint": "d09f512e882b6beaa069ce8edfbfdee934c25868024265937c92610bfdb080c0",
-        "new_row_id": "2583"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2574",
-        "key": "1812044816487904",
-        "source_ja": "솔직히 우와바미는 아침마다 기분이 좋지 않아 곤란하네.\n하루의 시작은 그대와 보내는 편이 훨씬 좋지.",
-        "source_fingerprint": "79c59e59a4ae0263f77cb55fcd74e9084110a3a3054d81c4ffc37970f7469e68",
-        "new_row_id": "2584"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2575",
-        "key": "1812044820444648",
-        "source_ja": "그대가 곧 돌아가지 않는다면, 우와바미에게 내보내 달라고 해야겠군.",
-        "source_fingerprint": "d2dac4d31394992c6271910fc39e2cfd35788c6b465d92df67e6cfe969627dcf",
-        "new_row_id": "2585"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2576",
-        "key": "1812044820444652",
-        "source_ja": "카바바 할멈은 손님을 재우는 데 엄격하지만, 어떻게든 둘러댈 수 있을 걸세.",
-        "source_fingerprint": "97fd6b7f05c7447a1e58233521d604cec44d5fef84fc72aacdcd84d938a976b6",
-        "new_row_id": "2586"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2577",
-        "key": "1812044820444656",
-        "source_ja": "밤이 오면 야성의 피가 들끓네...\n하지만 그대와 조금이라도 함께할 수 있다면, 그 괴로움쯤은 견뎌 보이겠네.",
-        "source_fingerprint": "850d75b068adfc689ef6602f524ea354c440dd18ad537f25347dc439cf846abb",
-        "new_row_id": "2587"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2578",
-        "key": "1812044992752120",
-        "source_ja": "자외선 차단제는 발랐나? 흐린 날에도 햇빛은 피부를 상하게 한다네!",
-        "source_fingerprint": "aca9bf2b783dbc39ff633c4614ea475c09cdc71446edddca02a8616def8fe637",
-        "new_row_id": "2588"
-      },
-      {
-        "textasset": "i18n_alone_avg_default",
-        "schema": "avg",
-        "row_id": "2579",
-        "key": "1812044992753148",
-        "source_ja": "유적에 간다면 우와바미를 데려가는 게 좋겠네.\n그대가 스스로를 지킬 수 있다는 건 알지만...\n괴물 퇴치를 업으로 삼은 자가 함께라면 안심이 되니까!",
-        "source_fingerprint": "13a4f09a187179a62aa9aa46c31696dc9f806365bafb0a66ea683cdd88ddb298",
-        "new_row_id": "2589"
-      }
-    ],
+    "previous_payload_rows": 22531,
+    "dropped_previous_payload_rows": 0,
+    "dropped_previous_payload_rows_sample": [],
+    "remapped_previous_payload_rows": 0,
+    "remapped_previous_payload_rows_sample": [],
     "fingerprint_remapped_previous_payload_rows": 0,
     "fingerprint_remapped_previous_payload_rows_sample": [],
     "source_text_remapped_previous_payload_rows": 0,
     "source_text_remapped_previous_payload_rows_sample": [],
-    "source_update_worksets": [
-      "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Tales of Seikyu\\Tales Of Seikyu_Data\\translation_research\\script_extraction\\codex_probe\\dialogue_working_sets\\source_update_20260825_build_24728299_Nine_Lives_355_dialogue_working_set.tsv"
-    ],
-    "source_update_rows": 9,
+    "source_update_worksets": [],
+    "source_update_rows": 0,
     "source_update_remapped_rows": 0,
     "source_update_remapped_rows_sample": [],
-    "source_update_added_rows": 9,
+    "source_update_added_rows": 0,
     "source_update_replaced_rows": 0,
     "source_diff_from_previous_build": {
       "previous_source_sha256": "6482ecc747ec57e040283dd500f33d11ec4eefcf0258263d72e26c6f08c0cd44",
-      "current_source_sha256": "5bd39f8df5faa5e29bbf16e6bffd181f22ad1792cc858be4fcd852428f9c8721",
+      "current_source_sha256": "5ab59347431bcbc7d54ad1d178c1fcbaefe3e1e1060930e5746836b355cab6e8",
       "removed_row_count": 18228,
       "added_row_count": 18293,
       "removed_rows_sample": [
@@ -457,8 +237,8 @@
   },
   "excel_bundle": {
     "glob": "StreamingAssets/aa/StandaloneWindows64/configs_assets_excel_*.bundle",
-    "source_sha256": "5bd39f8df5faa5e29bbf16e6bffd181f22ad1792cc858be4fcd852428f9c8721",
-    "target_sha256": "d1dc732bc37116148aaf1e01735ef24a6914cbaaf12f4f7a5621e4f350583285",
+    "source_sha256": "5ab59347431bcbc7d54ad1d178c1fcbaefe3e1e1060930e5746836b355cab6e8",
+    "target_sha256": "b5c886b6bc8ac22e7289fb96695612f4228177f271a5079f1f78457dcf68d114",
     "accepted_patched_sha256": [
       "196ad86bbbb018fb10357c00364f83fcba735a0541345195be1956a2c17eb593",
       "2b5dae9bfe4b2c0e9a5161808bf446c3cac7b1c93887f31f1be74fbbd0c1f1cb",
@@ -467,6 +247,7 @@
       "6216f684090e38eabceaa4440eabe56e3625e8e5e5359e10d70355e97781992f",
       "752afeb6937f8048fd1deb5511206272a05f5045d600e30cf54cefeb63f6240b",
       "8d1a44e05d299aa5a4300db0aa4219847fff1068640b13840af9fd794dd14c59",
+      "b5c886b6bc8ac22e7289fb96695612f4228177f271a5079f1f78457dcf68d114",
       "c6607bdea4519e5cc516b920ab520c90ab6ad0566f2ac0fcdb5ee3813ba03711",
       "d1dc732bc37116148aaf1e01735ef24a6914cbaaf12f4f7a5621e4f350583285",
       "d6076bf4927f4862743b615692802fdc78be8f3c0bd65acc6351cefa002d86fc",

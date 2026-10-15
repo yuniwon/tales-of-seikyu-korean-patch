@@ -16,13 +16,13 @@ def main() -> int:
     notice = build_notice(payload, release_notes, zip_sha256=ZIP_SHA256)
 
     checks = {
-        "title_has_public_version": "v0.1.16 배포" in notice.title,
+        "title_has_public_version": "v0.1.17 배포" in notice.title,
         "title_hides_internal_version": "playtest" not in notice.title,
-        "metadata_has_full_version": notice.metadata["version"] == "0.1.16-playtest.20260825",
-        "body_has_zip": "TalesOfSeikyuKoreanPatch-v0.1.16-playtest.20260825.zip" in notice.body,
+        "metadata_has_full_version": notice.metadata["version"] == "0.1.17-playtest.20261015",
+        "body_has_zip": "TalesOfSeikyuKoreanPatch-v0.1.17-playtest.20261015.zip" in notice.body,
         "body_has_sha": ZIP_SHA256 in notice.body,
         "body_has_row_count": "22,531행" in notice.body,
-        "body_has_buildid": "24728299" in notice.body,
+        "body_has_buildid": "24948693" in notice.body,
         "metadata_patch_rows": notice.metadata["patch_rows"] == 22531,
         "metadata_edit_url": notice.metadata["blog_edit_url"].endswith("/postupdate?logNo=224322599998"),
     }

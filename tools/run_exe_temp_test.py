@@ -9,7 +9,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
 EXE = REPO / "dist/TalesOfSeikyuKoreanPatch.exe"
-EXCEL_BUNDLE_NAME = "configs_assets_excel_3f1047082220cc86ef33c60c74bf4ded.bundle"
+EXCEL_BUNDLE_NAME = "configs_assets_excel_819141916302f0cf565fc9cfe6d0ffc7.bundle"
 EXCEL_SOURCE = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / EXCEL_BUNDLE_NAME
 BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
 
