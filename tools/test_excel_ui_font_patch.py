@@ -9,7 +9,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 SRC_GAME_DATA = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Tales of Seikyu\Tales Of Seikyu_Data")
 EXCEL_BUNDLE_NAME = "configs_assets_excel_819141916302f0cf565fc9cfe6d0ffc7.bundle"
-EXCEL_SOURCE = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / EXCEL_BUNDLE_NAME
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.17-playtest.20261015/excel.5ab59347431bcbc7.bak"
 sys.path.insert(0, str(REPO / "src"))
 
 from tos_ko_patcher.core import (  # noqa: E402
@@ -24,6 +24,7 @@ from tos_ko_patcher.core import (  # noqa: E402
 
 def main() -> int:
     payload = json.loads((REPO / "payload/patch_payload.json").read_text(encoding="utf-8"))
+    assert sha256_file(EXCEL_SOURCE) == payload["excel_bundle"]["source_sha256"]
     font_patch = payload["excel_bundle"]["ui_font_patch"]
     source_raw = textassets_from_bundle(EXCEL_SOURCE)[font_patch["textasset"]]
     source_old_count = source_raw.count(write_string(font_patch["old_alias"]))

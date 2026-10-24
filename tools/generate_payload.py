@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import csv
+import re
 import shutil
 import subprocess
 import sys
@@ -40,6 +41,7 @@ BAG_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / CURRENT
 PREVIOUS_PAYLOAD = REPO / "payload/patch_payload.json"
 STEAM_MANIFEST = SRC_GAME_DATA.parents[2] / "appmanifest_2340520.acf"
 SOURCE_UPDATE_WORKSETS: list[Path] = []
+REVIEWED_POLISH = REPO / "payload/reviewed_polish.tsv"
 
 SURFACE_TEXT_OVERRIDES = {
     # This compact vertical button uses the same font asset as working item text,
@@ -79,6 +81,21 @@ def load_previous_release_payload() -> dict[str, Any]:
     if proc.returncode == 0 and proc.stdout.strip():
         return json.loads(proc.stdout)
     return json.loads(PREVIOUS_PAYLOAD.read_text(encoding="utf-8"))
+
+
+def unpatched_excel_source(bundle: Path, previous_payload: dict[str, Any]) -> Path:
+    excel = previous_payload["excel_bundle"]
+    known_patches = set(excel.get("accepted_patched_sha256", [])) | {excel["target_sha256"]}
+    if sha256_file(bundle) not in known_patches:
+        return bundle
+    expected = str(excel["source_sha256"])
+    candidates = []
+    for folder in ("baselines", "backups"):
+        candidates.extend((SRC_GAME_DATA / ".tos_korean_patch" / folder).glob(f"*/excel.{expected[:16]}.bak"))
+    for candidate in sorted(candidates):
+        if sha256_file(candidate) == expected:
+            return candidate
+    raise RuntimeError("The installed Excel is patched; a hash-verified clean source backup is required to generate translations.")
 
 
 def source_identity_index(bundle: Path) -> dict[str, set[tuple[str, str]]]:
@@ -412,6 +429,323 @@ def apply_surface_text_overrides(rows: list[dict[str, Any]]) -> list[dict[str, A
     return updated_rows
 
 
+REVIEWED_SOURCE_TOKEN_REPAIRS = {
+    ("i18n_custom", "Game_Name_CDJump"): (
+        ("<i>", "</i>"),
+        (),
+    ),
+    ("i18n_custom", "StoryBook_Collect"): (
+        ("<i>", "</i>"),
+        (),
+    ),
+    ("story_book__main_content_i18n", "story_book__main/content_i18n_e469a042375efc7baf91d715eafc3ba9"): (
+        ("<b>", "<i>", "</i>", "</b>"),
+        (),
+    ),
+    ("i18n_avg_default", "1818885489140342"): (
+        ("<i>", "</i>"),
+        (),
+    ),
+    ("i18n_avg_default", "1773671126447212"): (
+        ("{highlight.default}", "{location.21}", "{highlight}"),
+        ("{location.21}",),
+    ),
+    ("i18n_avg_default", "1773671126617422"): (
+        ("{highlight}", "{location.16}", "{highlight.default}"),
+        (),
+    ),
+    ("i18n_avg_default", "1813236155477442"): (
+        ("{start_wedding_npc}", "{c.playername}", "{npc.WeddingNPC}"),
+        ("{start_wedding_npc}",),
+    ),
+    ("i18n_avg_default", "1813236122144653"): (
+        ("{start_wedding_npc}", "{c.playername}", "{npc.WeddingNPC}"),
+        ("{c.playername}", "{npc.WeddingNPC}"),
+    ),
+    ("i18n_avg_default", "1809595912229486"): (
+        ("{npc.BestLoverNpc}", "{npc.BestLoverNpc}"),
+        (),
+    ),
+    ("i18n_avg_default", "1814629625282673"): (
+        ("<shiver>", "</shiver>"),
+        (),
+    ),
+    ("i18n_avg_default", "1814630351499405"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1814630351499407"): (
+        (),
+        ("{c.playername}",),
+    ),
+    ("i18n_avg_default", "1814712403374107"): (
+        (),
+        ("<shiver>", "</shiver>"),
+    ),
+    ("i18n_avg_default", "1814712404686878"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1814712406960167"): (
+        ("<i>", "</i>"),
+        (),
+    ),
+    ("i18n_avg_default", "1816057644940794"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1794817603263553"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1794817603263559"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1795328179342409"): (
+        ("{sw.Ninja}",),
+        (),
+    ),
+    ("i18n_avg_default", "1813236083654884"): (
+        ("{start_wedding_npc}", "{c.playername}", "{npc.WeddingNPC}"),
+        ("{c.playername}", "{npc.WeddingNPC}"),
+    ),
+    ("i18n_avg_default", "1813235503409711"): (
+        ("{start_wedding_npc}", "{c.playername}", "{npc.WeddingNPC}"),
+        ("{start_wedding_npc}",),
+    ),
+    ("i18n_avg_default", "1813236151020540"): (
+        ("{start_wedding_npc}", "{c.playername}", "{npc.WeddingNPC}"),
+        ("{c.playername}", "{npc.WeddingNPC}"),
+    ),
+    ("i18n_avg_default", "1813236133572947"): (
+        ("{start_wedding_npc}", "{c.playername}", "{npc.WeddingNPC}"),
+        ("{c.playername}", "{npc.WeddingNPC}"),
+    ),
+    ("i18n_avg_default", "1795425752449203"): (
+        ("<i>", "<I>", "</i>"),
+        (),
+    ),
+    ("i18n_avg_default", "1813236111417799"): (
+        ("{start_wedding_npc}", "{c.playername}", "{npc.WeddingNPC}"),
+        ("{c.playername}", "{npc.WeddingNPC}"),
+    ),
+    ("i18n_alone_avg_default", "1806646314739610"): (
+        ("<i>", "{c.playername}", "</i>"),
+        (),
+    ),
+    ("i18n_avg_default", "1821352528199317"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1776325335605723"): (
+        ("<b>", "<i>", "{highlight.default}", "{highlight}", "</i>", "</b>"),
+        (),
+    ),
+    ("i18n_avg_default", "1776325385311710"): (
+        ("{c.playername}", "{highlight.default}", "<i>", "</i>", "{highlight}"),
+        (),
+    ),
+    ("i18n_avg_default", "1776325508172271"): (
+        ("<b>", "</b>"),
+        (),
+    ),
+    ("i18n_avg_default", "1776325612988920"): (
+        ("{c.playername}", "<i>", "</i>"),
+        (),
+    ),
+    ("i18n_avg_default", "1777656980360898"): (
+        ("{c.playername}", "{npc.4101}"),
+        (),
+    ),
+    ("i18n_avg_default", "1777662268200786"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1777662185212747"): (
+        ("{c.playername}",),
+        (),
+    ),
+    ("i18n_avg_default", "1776321964130778"): (
+        ("<b>", "{highlight.default}", "{highlight}", "</b>"),
+        (),
+    ),
+    ("i18n_avg_default", "1776321995108828"): (
+        ("{highlight.default}", "<b>", "</b>", "{highlight}", "<i>", "</i>"),
+        (),
+    ),
+    ("i18n_avg_default", "1804899039517200"): (
+        ("{c.playername}", "{c.playername}"),
+        (),
+    ),
+}
+
+
+REVIEWED_ORIGINAL_MARKUP_REPAIRS = {
+    ("i18n_avg_default", "1775429067206302"): (
+        "</shiver>ゴロゴロ…</shiver>",
+        ("</shiver>", "</shiver>"),
+        ("<shiver>", "</shiver>"),
+    ),
+    ("i18n_avg_default", "1805256890597686"): (
+        "<shiver>もっと食わせろぉぉぉ！！！</ishiver>",
+        ("<shiver>", "</ishiver>"),
+        ("<shiver>", "</shiver>"),
+    ),
+    ("i18n_avg_default", "1773671128313092"): (
+        "刮目せよ～！\n<b>全能にして無敵の戦士…<b>",
+        ("<b>", "<b>"),
+        ("<b>", "</b>"),
+    ),
+}
+
+
+REVIEWED_ORIGINAL_TOKEN_REPAIRS = {
+    ("tutorial__ui_tutorial_desc", "tutorial__ui_tutorial/desc_0a87ea42380b270dff34a3bee3299d06"): (
+        "より多くの色が必要の場合、{item.3444}を使います。\nカラースペクトルをスライドして、お気に入りの色を選んでください。",
+        "如果这些预设颜色都不是你想要的，不妨来试试{item.25125}。\n滑动色谱，挑选你心仪的颜色。",
+        "If you would like more colors, try using the {item.3444}.\nUse the slider to pick the perfect shade for you.",
+        ("{item.3444}",),
+        ("{item.25125}",),
+    ),
+    ("i18n_avg_default", "1820218594496168"): (
+        "黒狐と戦ってたら、{c.playername}、\n気を失っちゃったんだよ！",
+        "我当时在和黑暗狐狸战斗，然后就失去意识了！",
+        "I was fighting the Dark Fox, then I blacked out!",
+        ("{c.playername}",),
+        (),
+    ),
+}
+
+
+def validate_reviewed_tokens(identity: tuple[str, str], old: str, new: str, original: dict[str, Any]) -> None:
+    """Restore exact audited contamination patterns to their Japanese slot contract."""
+    pattern = r"\{[^{}]*\}|</?[^>]+>"
+    old_tokens, new_tokens = tuple(re.findall(pattern, old)), tuple(re.findall(pattern, new))
+    original_repair = REVIEWED_ORIGINAL_TOKEN_REPAIRS.get(identity)
+    if original_repair is not None:
+        source_ja, source_zh, source_en, malformed, canonical = original_repair
+        if (original.get("source_ja") == source_ja
+                and original.get("source_zh_cn") == source_zh
+                and original.get("source_en") == source_en
+                and old_tokens in {malformed, canonical} and new_tokens == canonical):
+            return
+        raise RuntimeError(f"reviewed polish original-token repair contract changed: {identity}")
+    markup_repair = REVIEWED_ORIGINAL_MARKUP_REPAIRS.get(identity)
+    if markup_repair is not None:
+        source_ja, malformed, canonical = markup_repair
+        if (original.get("source_ja") == source_ja
+                and old_tokens in {malformed, canonical} and new_tokens == canonical):
+            return
+        raise RuntimeError(f"reviewed polish original-markup repair contract changed: {identity}")
+    repair = REVIEWED_SOURCE_TOKEN_REPAIRS.get(identity)
+    if repair is not None:
+        contaminated, canonical = repair
+        if (tuple(re.findall(pattern, str(original.get("source_ja", "")))) == canonical
+                and new_tokens == canonical and old_tokens in {contaminated, canonical}):
+            return
+        raise RuntimeError(f"reviewed polish source-token repair contract changed: {identity}")
+    if old_tokens != new_tokens:
+        raise RuntimeError(f"reviewed polish token contract changed: {identity}")
+
+
+REVIEWED_ADDITIONS = REPO / "payload/reviewed_additions.json"
+
+
+def reviewed_addition_seeds(
+    source_bundle: Path, registry: Path = REVIEWED_ADDITIONS,
+) -> list[dict[str, Any]]:
+    """Validate exact original rows; Korean remains in the approved TSV only."""
+    contracts = json.loads(registry.read_text(encoding="utf-8"))
+    if not isinstance(contracts, list):
+        raise RuntimeError("reviewed addition registry must be a list")
+    source = source_row_lookup(source_bundle)
+    seen: set[tuple[str, str]] = set()
+    for entry in contracts:
+        required = {"textasset", "schema", "row_id", "key", "source_fingerprint", "source_ja"}
+        if not isinstance(entry, dict) or set(entry) != required or not all(isinstance(v, str) for v in entry.values()):
+            raise RuntimeError("reviewed addition contract fields invalid")
+        identity = (entry["textasset"], entry["key"])
+        if identity in seen:
+            raise RuntimeError(f"duplicate reviewed addition contract: {identity}")
+        seen.add(identity)
+        original = source.get((entry["textasset"], entry["row_id"], entry["key"]))
+        if (original is None or schema_for_textasset(entry["textasset"]) != entry["schema"]
+                or row_source_fingerprint(original, entry["schema"]) != entry["source_fingerprint"]
+                or original.get("source_ja") != entry["source_ja"]):
+            raise RuntimeError(f"reviewed addition original source changed: {identity}")
+    return contracts
+
+
+def seed_reviewed_additions(
+    rows: list[dict[str, Any]], source_bundle: Path, workset: Path = REVIEWED_POLISH,
+    registry: Path = REVIEWED_ADDITIONS,
+) -> tuple[list[dict[str, Any]], int]:
+    contracts = reviewed_addition_seeds(source_bundle, registry)
+    proposals = read_tsv(workset)
+    result = [dict(row) for row in rows]
+    added = 0
+    for entry in contracts:
+        identity = (entry["textasset"], entry["row_id"], entry["key"])
+        approved = [p for p in proposals
+                    if (p["source_textasset"], p["row_id"], p["dialog_key"]) == identity]
+        if (len(approved) != 1 or approved[0].get("review_status") != "approved"
+                or approved[0]["source_fingerprint"] != entry["source_fingerprint"]
+                or approved[0]["old_target"] != entry["source_ja"]
+                or not approved[0]["korean_proposal"].strip()):
+            raise RuntimeError(f"reviewed addition requires exact approved translation: {identity}")
+        candidates = [r for r in result if (r["textasset"], r["key"]) == (identity[0], identity[2])]
+        if candidates:
+            if (len(candidates) != 1 or str(candidates[0]["row_id"]) != identity[1]
+                    or candidates[0]["schema"] != entry["schema"]
+                    or candidates[0]["source_fingerprint"] != entry["source_fingerprint"]):
+                raise RuntimeError(f"reviewed addition identity collision: {identity}")
+            # Never reset an existing Korean row: the ordinary overlay checks conflicts.
+        else:
+            result.append(dict(entry))
+            added += 1
+    return result, added
+
+
+def apply_reviewed_polish(
+    rows: list[dict[str, Any]], source_bundle: Path, workset: Path = REVIEWED_POLISH,
+) -> tuple[list[dict[str, Any]], int]:
+    """Apply accepted text only while source and previous Korean still agree."""
+    if not workset.exists():
+        raise RuntimeError(f"reviewed polish workset missing: {workset}")
+    proposals = read_tsv(workset)
+    source = source_row_lookup(source_bundle)
+    indexes: dict[tuple[str, str], list[int]] = {}
+    for index, row in enumerate(rows):
+        indexes.setdefault((str(row["textasset"]), str(row["key"])), []).append(index)
+    result = [dict(row) for row in rows]
+    seen: set[int] = set()
+    for proposal in proposals:
+        if proposal.get("review_status") != "approved":
+            raise RuntimeError("reviewed polish contains an unapproved row")
+        identity = (proposal["source_textasset"], proposal["dialog_key"])
+        candidates = indexes.get(identity, [])
+        exact = [i for i in candidates if str(rows[i]["row_id"]) == proposal["row_id"]]
+        matches = exact or candidates
+        if len(matches) != 1:
+            raise RuntimeError(f"reviewed polish target missing or ambiguous: {identity}")
+        index = matches[0]
+        if index in seen:
+            raise RuntimeError(f"duplicate reviewed polish target: {identity}")
+        seen.add(index)
+        entry = rows[index]
+        key = (str(entry["textasset"]), str(entry["row_id"]), str(entry["key"]))
+        original = source.get(key)
+        if original is None or row_source_fingerprint(original, entry["schema"]) != proposal["source_fingerprint"]:
+            raise RuntimeError(f"reviewed polish source changed: {identity}")
+        old, new = proposal["old_target"], proposal["korean_proposal"]
+        if not new.strip() or str(entry["source_ja"]) not in {old, new}:
+            raise RuntimeError(f"reviewed polish Korean conflict: {identity}")
+        validate_reviewed_tokens(identity, old, new, original)
+        result[index]["source_ja"] = new
+    return result, len(seen)
+
+
 def source_diff(previous_source: Path, current_source: Path) -> dict[str, Any]:
     previous = source_identity_index(previous_source)
     current = source_identity_index(current_source)
@@ -493,14 +827,20 @@ def apply_bag_to_temp(source: Path, payload: dict[str, Any]) -> str:
 
 def main() -> int:
     previous_payload = load_previous_release_payload()
+    excel_source = unpatched_excel_source(EXCEL_SOURCE, previous_payload)
     rows, dropped_rows, remapped_rows, fingerprint_remapped_rows, source_text_remapped_rows = build_rows(
-        previous_payload, EXCEL_SOURCE, PREVIOUS_EXCEL_SOURCE
+        previous_payload, excel_source, PREVIOUS_EXCEL_SOURCE
     )
-    overlay_rows, source_update_remapped_rows = source_update_rows(EXCEL_SOURCE)
+    overlay_rows, source_update_remapped_rows = source_update_rows(excel_source)
     rows, source_update_added_rows, source_update_replaced_rows = merge_patch_rows(rows, overlay_rows)
     rows = apply_surface_text_overrides(rows)
-    rows = enrich_rows_with_source_fingerprints(rows, EXCEL_SOURCE)
-    diff = source_diff(PREVIOUS_EXCEL_SOURCE, EXCEL_SOURCE)
+    rows = enrich_rows_with_source_fingerprints(rows, excel_source)
+    rows, reviewed_addition_count = seed_reviewed_additions(rows, excel_source)
+    rows, reviewed_polish_count = apply_reviewed_polish(rows, excel_source)
+    # Keep the three known broken-glyph surfaces safe in the shipped build;
+    # their approved Korean remains in the editorial TSV for future font work.
+    rows = apply_surface_text_overrides(rows)
+    diff = source_diff(PREVIOUS_EXCEL_SOURCE, excel_source)
     payload: dict[str, Any] = {
         "patch_version": PATCH_VERSION,
         "game": "Tales of Seikyu",
@@ -508,7 +848,7 @@ def main() -> int:
         "supported_platform": "Steam Windows",
         "generated_from": {
             "steam_buildid": current_build_id(),
-            "excel_source_sha256": sha256_file(EXCEL_SOURCE),
+            "excel_source_sha256": sha256_file(excel_source),
             "previous_excel_source_sha256": sha256_file(PREVIOUS_EXCEL_SOURCE),
             "previous_payload_rows": len(previous_payload["excel_bundle"]["patch_rows"]),
             "dropped_previous_payload_rows": len(dropped_rows),
@@ -525,20 +865,26 @@ def main() -> int:
             "source_update_remapped_rows_sample": source_update_remapped_rows[:20],
             "source_update_added_rows": source_update_added_rows,
             "source_update_replaced_rows": source_update_replaced_rows,
+            "reviewed_polish_rows": reviewed_polish_count,
+            "reviewed_addition_rows": reviewed_addition_count,
+            "reviewed_additions_registry": str(REVIEWED_ADDITIONS.relative_to(REPO)),
+            "reviewed_additions_sha256": sha256_file(REVIEWED_ADDITIONS),
+            "reviewed_polish_workset": str(REVIEWED_POLISH.relative_to(REPO)),
+            "reviewed_polish_sha256": sha256_file(REVIEWED_POLISH),
             "source_diff_from_previous_build": diff,
             "bag_source_sha256": sha256_file(BAG_SOURCE),
             "bag_reference_current_sha256": sha256_file(BAG_CURRENT),
         },
         "excel_bundle": {
             "glob": EXCEL_GLOB,
-            "source_sha256": sha256_file(EXCEL_SOURCE),
+            "source_sha256": sha256_file(excel_source),
             "target_sha256": "",
             "accepted_patched_sha256": previous_accepted_hashes(previous_payload, "excel_bundle"),
             "ui_font_patch": {
                 "textasset": UI_CONFIG_JAPANESE,
                 "old_alias": OLD_UI_FONT_ALIAS,
                 "new_alias": KOREAN_UI_FONT_ALIAS,
-                "expected_replacements": ui_font_alias_source_count(EXCEL_SOURCE),
+                "expected_replacements": ui_font_alias_source_count(excel_source),
                 "minimum_replacements": 1,
             },
             "patch_rows": rows,
@@ -565,7 +911,7 @@ def main() -> int:
         target_dir = data_root / "StreamingAssets/aa/StandaloneWindows64"
         target_dir.mkdir(parents=True)
         temp_excel = target_dir / CURRENT_EXCEL_BUNDLE_NAME
-        shutil.copy2(EXCEL_SOURCE, temp_excel)
+        shutil.copy2(excel_source, temp_excel)
         planned, _ = planned_excel_textassets(temp_excel, payload)
         saved = save_textassets_to_bundle(temp_excel, temp / "out", planned)
         excel_hash = sha256_file(saved)

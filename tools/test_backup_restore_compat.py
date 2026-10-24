@@ -12,7 +12,7 @@ EXCEL_BUNDLE_NAME = "configs_assets_excel_819141916302f0cf565fc9cfe6d0ffc7.bundl
 EXCEL_CURRENT = SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64" / EXCEL_BUNDLE_NAME
 BAG_CURRENT = next((SRC_GAME_DATA / "StreamingAssets/aa/StandaloneWindows64").glob("uiview_assets_bagfunctionitem_*.bundle"))
 BAG_BUNDLE_NAME = BAG_CURRENT.name
-EXCEL_SOURCE = EXCEL_CURRENT
+EXCEL_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.17-playtest.20261015/excel.5ab59347431bcbc7.bak"
 BAG_SOURCE = SRC_GAME_DATA / ".tos_korean_patch/baselines/0.1.7-playtest.20260701/bag.e4eabffd3e04ce96.bak"
 sys.path.insert(0, str(REPO / "src"))
 
@@ -26,6 +26,9 @@ from tos_ko_patcher.core import (  # noqa: E402
 
 def main() -> int:
     payload_path = REPO / "payload/patch_payload.json"
+    payload = json.loads(payload_path.read_text(encoding="utf-8"))
+    assert sha256_file(EXCEL_SOURCE) == payload["excel_bundle"]["source_sha256"]
+    assert sha256_file(BAG_SOURCE) == payload["bag_function_bundle"]["source_sha256"]
     with tempfile.TemporaryDirectory(prefix="tos-ko-restore-compat-", ignore_cleanup_errors=True) as temp:
         data_root = Path(temp) / "Tales Of Seikyu_Data"
         target_dir = data_root / "StreamingAssets/aa/StandaloneWindows64"

@@ -1,0 +1,164 @@
+[
+  {
+    "textasset": "i18n_avg_default",
+    "schema": "avg",
+    "row_id": "17858",
+    "key": "1825724520209093",
+    "source_fingerprint": "b06accbd85ea12c1224ddb59f436e6a99025cbc575e78d0f8d5b48154f7da4bb",
+    "source_ja": "なんだ？怖気づいたのか？"
+  },
+  {
+    "textasset": "i18n_avg_default",
+    "schema": "avg",
+    "row_id": "18200",
+    "key": "1821534576548451",
+    "source_fingerprint": "eb04c892c9bdedec1d73260b40f185676063b2d8d2f9efaf864c5ee048f08aa1",
+    "source_ja": "ぐああ…！貴様ごときに、我を操れるはずが…！"
+  },
+  {
+    "textasset": "i18n_avg_default",
+    "schema": "avg",
+    "row_id": "18201",
+    "key": "1821534576550500",
+    "source_fingerprint": "3d0dfcc3887b91ec03c9494d4876ea32fe944a6f978bf9bdb2800a4c60d3e034",
+    "source_ja": "な…なんだ、これは！？"
+  },
+  {
+    "textasset": "i18n_avg_default",
+    "schema": "avg",
+    "row_id": "18202",
+    "key": "1821534576550501",
+    "source_fingerprint": "9bf26add175ed04bd9056f23c39eba7feb7f0c19699e7cf58c74e1a91efbd16b",
+    "source_ja": "稲荷様…？\nお戻りになられたのですか…？\nこれは…全てあなた様のためにやったことなのです…"
+  },
+  {
+    "textasset": "i18n_avg_default",
+    "schema": "avg",
+    "row_id": "18203",
+    "key": "1821534576550502",
+    "source_fingerprint": "2a46d79155e698094f61fd9e030d0f126b599468a60f5be83803270202963e02",
+    "source_ja": "お主は何者だ…？\nなぜ我を操っている…？"
+  },
+  {
+    "textasset": "i18n_avg_default",
+    "schema": "avg",
+    "row_id": "18204",
+    "key": "1821534565433954",
+    "source_fingerprint": "6a8a2404106d3c79246897784eece2522bd7bc8f513e6774a1692e90429eba5c",
+    "source_ja": "ぐああああっ！！！"
+  },
+  {
+    "textasset": "i18n_avg_default", "schema": "avg", "row_id": "18197",
+    "key": "1821785051835994",
+    "source_fingerprint": "529523e2f7626541ea6aaf52e55ded67d34fde2ba1bd634dc68751872ee0716f",
+    "source_ja": "ふん、神に楯突くつもりか？\nグハハハ！"
+  },
+  {
+    "textasset": "i18n_avg_default", "schema": "avg", "row_id": "18198",
+    "key": "1821785051837021",
+    "source_fingerprint": "14885365a6defc9550406056934c32609cc1742f4f6c35466500f4cc8e09e619",
+    "source_ja": "ぐぬぬ…腹が減った！\nそろそろ、貴様らも鬱陶しくなってきたわ！"
+  },
+  {
+    "textasset": "i18n_avg_default", "schema": "avg", "row_id": "18199",
+    "key": "1821785051838048",
+    "source_fingerprint": "094c8a4dee83221ce7b16dabcf287fcf48acbf51eeba9079a1d547989db6ecfd",
+    "source_ja": "<shiver>もう限界だーっ！！！</shiver>"
+  },
+  {
+    "textasset": "i18n_avg_default", "schema": "avg", "row_id": "18205",
+    "key": "1821785053219427",
+    "source_fingerprint": "b8ed65efff4bdb068172bfa3ce84c2e52787625c12dbad9a19abd0e2ee2f89d1",
+    "source_ja": "今こそ、タヌキ一族を率いるに相応しい男だと証明する時だ…"
+  },
+  {
+    "textasset": "i18n_avg_default", "schema": "avg", "row_id": "18206",
+    "key": "1821785053219430",
+    "source_fingerprint": "3a63afb5ac5e15b36a0672046c8222aa976eac050c3e6c5129f4d86583438967",
+    "source_ja": "一族の明るい未来を切り拓くには、こうするしかねえのさ。"
+  },
+  {
+    "textasset": "i18n_avg_default", "schema": "avg", "row_id": "18207",
+    "key": "1821785053220457",
+    "source_fingerprint": "ae4b868b4619846df1861aed5bd0557397cd2e78cbf405747c913444f198714b",
+    "source_ja": "この戦いの地は、いずれ聖なる場所として語り継がれるだろうよ！"
+  },
+  {
+    "textasset": "i18n_quest_default", "schema": "context", "row_id": "556",
+    "key": "1794813389587373",
+    "source_fingerprint": "784d9f36d075d8e932cc93c933c96fb05f8d66cca2eb0745c08fe2f538148908",
+    "source_ja": "欲しかったアイテムを持ってきた。"
+  },
+  {
+    "textasset": "i18n_quest_default", "schema": "context", "row_id": "562",
+    "key": "1792021276622812",
+    "source_fingerprint": "07dc537dedc10efe9d6c80ff58bc9f897d797f06e76086c6c00ebfbc0c0ef328",
+    "source_ja": "欲しかったアイテムを持ってきた。"
+  },
+  {
+    "textasset": "i18n_custom", "schema": "keyed_custom", "row_id": "1694",
+    "key": "EggGame_gameover",
+    "source_fingerprint": "391f5fffc78a926260767369167310d44e3accf167d8705a164ef070561db975",
+    "source_ja": "Game Over"
+  },
+  {
+    "textasset": "i18n_custom", "schema": "keyed_custom", "row_id": "1695",
+    "key": "EggGame_ready",
+    "source_fingerprint": "a4349f5383047383c73119fabe6e939002d645ef7bdd964b3c45aade36f80052",
+    "source_ja": "Ready!"
+  },
+  {
+    "textasset": "i18n_custom", "schema": "keyed_custom", "row_id": "1696",
+    "key": "EggGame_go",
+    "source_fingerprint": "0f355f8bf97a106636cee9de1ebc3f5944547e089c1eb5b069207bb645a21448",
+    "source_ja": "GO!"
+  },
+  {
+    "textasset": "i18n_custom", "schema": "keyed_custom", "row_id": "1741",
+    "key": "Minigame_Result_Perfect",
+    "source_fingerprint": "be18f528137cfe963651a31fde357922e194f522ea28704f9a1404d4f49665e4",
+    "source_ja": "Perfect"
+  },
+  {
+    "textasset": "i18n_custom", "schema": "keyed_custom", "row_id": "1742",
+    "key": "Minigame_Result_Great",
+    "source_fingerprint": "3f8e1b1024d4d3371544174b1ecfa82168a655ed5494b25e69291fb48acb2be3",
+    "source_ja": "Great"
+  },
+  {
+    "textasset": "i18n_custom", "schema": "keyed_custom", "row_id": "1743",
+    "key": "Minigame_Result_Good",
+    "source_fingerprint": "d9a2eaa43960cf4cfada531e6e55f7c57d55e8f8c0909bd11e2e03d7a2ccac5e",
+    "source_ja": "Good"
+  },
+  {
+    "textasset": "i18n_custom", "schema": "keyed_custom", "row_id": "1744",
+    "key": "Minigame_Result_Bad",
+    "source_fingerprint": "d985eb751aae1971da23069220fdde531b58e486af00184091edee6c5aafed5b",
+    "source_ja": "BAD"
+  },
+  {
+    "textasset": "i18n_custom",
+    "schema": "keyed_custom",
+    "row_id": "1922",
+    "key": "BlackJack_Win",
+    "source_fingerprint": "8ab232a025b4c5283d29f8cd8f453d5746abfca090ab165dcbf04668464f86e3",
+    "source_ja": "Victory!"
+  },
+  {
+    "textasset": "i18n_custom",
+    "schema": "keyed_custom",
+    "row_id": "1923",
+    "key": "BlackJack_Push",
+    "source_fingerprint": "1b711823413050714f5154121e75ec9e77c73184e309ce941e4d454849e5efba",
+    "source_ja": "Draw"
+  },
+  {
+    "textasset": "i18n_custom",
+    "schema": "keyed_custom",
+    "row_id": "1924",
+    "key": "BlackJack_Lose",
+    "source_fingerprint": "370e727f5f4d07bea999668091d818901eace5fc2e134d5a6aaae73293a85867",
+    "source_ja": "Lose！"
+  }
+]
